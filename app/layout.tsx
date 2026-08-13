@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ScrollProvider from "@/components/providers/ScrollProvider";
 import AuthProvider from "@/components/providers/AuthProvider";
+import CartSync from "@/components/cart/CartSync";
 
 const geist = Geist({
   variable: "--font-geist",
@@ -39,7 +40,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"
@@ -67,6 +70,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Header />
             <main className="flex-grow">{children}</main>
             <Footer />
+            <CartSync />
           </ScrollProvider>
         </AuthProvider>
       </body>

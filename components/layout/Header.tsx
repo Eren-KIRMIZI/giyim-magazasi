@@ -65,6 +65,14 @@ export default function Header() {
           </button>
           {status === "authenticated" ? (
             <div className="hidden md:flex items-center gap-stack-sm">
+              {session?.user?.role === "ADMIN" && (
+                <Link
+                  href="/admin"
+                  className="font-label-mono text-label-mono uppercase text-primary hover:text-on-surface transition-colors"
+                >
+                  Admin
+                </Link>
+              )}
               <Link
                 href="/hesabim"
                 className="font-label-mono text-label-mono uppercase text-on-surface dark:text-on-surface-variant hover:text-primary transition-colors"

@@ -6,6 +6,7 @@ import { useCartStore } from "@/store/cart";
 import { formatPrice, type Product } from "@/lib/data";
 import { flyToCart } from "@/lib/flyToCart";
 import ProductCard from "@/components/store/ProductCard";
+import ReviewsSection from "@/components/reviews/ReviewsSection";
 
 interface ProductDetailProps {
   product: Product;
@@ -178,6 +179,8 @@ export default function ProductDetail({
           </div>
         </div>
       </div>
+
+      <ReviewsSection productId={product.id} />
 
       <section className="mt-stack-lg pt-stack-lg border-t border-on-surface">
         <h2 className="font-headline-md text-headline-md uppercase mb-stack-md tracking-tight">

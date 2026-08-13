@@ -19,6 +19,7 @@ interface CartState {
   removeItem: (productId: string, size: string) => void;
   updateQuantity: (productId: string, size: string, quantity: number) => void;
   clearCart: () => void;
+  setItems: (items: CartItem[]) => void;
 }
 
 export const useCartStore = create<CartState>()(
@@ -66,6 +67,7 @@ export const useCartStore = create<CartState>()(
         });
       },
       clearCart: () => set({ items: [] }),
+      setItems: (items) => set({ items }),
     }),
     { name: "last-dance-cart" }
   )
