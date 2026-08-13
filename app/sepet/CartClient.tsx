@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCartStore } from "@/store/cart";
@@ -10,11 +11,44 @@ export default function CartClient() {
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
   const clearCart = useCartStore((s) => s.clearCart);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+
+  const handleCheckout = async () => {
+    setCheckoutLoading(true);
+    setCheckoutError("");
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map((item) => ({
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            size: item.size,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Checkout failed");
+      }
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      setCheckoutError(
+        err instanceof Error ? err.message : "Checkout failed"
+      );
+      setCheckoutLoading(false);
+    }
+  };
 
   if (items.length === 0) {
     return (
@@ -162,12 +196,19 @@ export default function CartClient() {
             </div>
             <button
               type="button"
-              className="w-full bg-on-surface text-surface font-headline-md text-headline-md uppercase py-4 hover:bg-primary hover:text-on-primary transition-colors"
+              onClick={handleCheckout}
+              disabled={checkoutLoading}
+              className="w-full bg-on-surface text-surface font-headline-md text-headline-md uppercase py-4 hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Proceed to Checkout
+              {checkoutLoading ? "Redirecting..." : "Proceed to Checkout"}
             </button>
+            {checkoutError && (
+              <p className="font-label-mono text-label-mono uppercase text-error text-center">
+                {checkoutError}
+              </p>
+            )}
             <p className="font-label-mono text-label-mono uppercase text-on-surface-variant text-center">
-              Checkout integration coming with Stripe
+              Stripe Checkout entegrasyonu — STRIPE_SECRET_KEY ile etkinleşir
             </p>
           </div>
         </div>

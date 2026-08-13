@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useCartStore } from "@/store/cart";
 import { formatPrice, type Product } from "@/lib/data";
+import { flyToCart } from "@/lib/flyToCart";
 import ProductCard from "@/components/store/ProductCard";
 
 interface ProductDetailProps {
@@ -38,6 +39,7 @@ export default function ProductDetail({
 
   const handleAddToBag = () => {
     if (!activeSize || soldOut) return;
+    flyToCart(document.getElementById("main-image"));
     addItem({
       productId: product.id,
       slug: product.slug,

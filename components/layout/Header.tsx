@@ -68,6 +68,7 @@ export default function Header() {
           <Link
             href="/sepet"
             aria-label="Shopping Bag"
+            id="cart-icon"
             className="relative hover:text-primary dark:hover:text-primary-fixed-dim transition-all duration-150 p-2"
           >
             <span className="material-symbols-outlined">shopping_bag</span>

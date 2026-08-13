@@ -1,0 +1,153 @@
+// Prisma schema — LAST DANCE e-ticaret veri modeli (taslak)
+// Kurulum: DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/giyim_magazasi?schema=public"
+//        npx prisma migrate dev --name init
+//        npx prisma generate
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  passwordHash  String?
+  image         String?
+  role          String    @default("CUSTOMER")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  orders        Order[]
+  cart          Cart?
+  reviews       Review[]
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  name      String
+  products  Product[]
+}
+
+model Product {
+  id           String      @id @default(cuid())
+  slug         String      @unique
+  name         String
+  description  String
+  price        Decimal     @db.Decimal(10, 2)
+  compareAtPrice Decimal?  @db.Decimal(10, 2)
+  stock        Int         @default(0)
+  status       String      @default("ACTIVE") // ACTIVE | DRAFT | SOLD_OUT
+  badge        String? // NEW | LIMITED | SOLD OUT
+  categoryId   String
+  category     Category    @relation(fields: [categoryId], references: [id])
+
+  images       ProductImage[]
+  variants     ProductVariant[]
+  orderItems   OrderItem[]
+  cartItems    CartItem[]
+  reviews      Review[]
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([categoryId])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  position  Int     @default(0)
+
+  @@index([productId])
+}
+
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size      String // S | M | L | XL | ONE SIZE | 40 ...
+  color     String? // Black | Red | White ...
+  sku       String  @unique
+  stock     Int     @default(0)
+  price     Decimal? @db.Decimal(10, 2)
+
+  @@unique([productId, size, color])
+  @@index([productId])
+}
+
+model Order {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  status        String    @default("PENDING") // PENDING | PAID | SHIPPED | DELIVERED | CANCELLED
+  total         Decimal   @db.Decimal(10, 2)
+  stripeSessionId String?  @unique
+  shippingAddress Json?
+  items         OrderItem[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2)
+  size      String?
+  color     String?
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Cart {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id])
+  items     CartItem[]
+
+  updatedAt DateTime  @updatedAt
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  size      String?
+  color     String?
+
+  @@unique([cartId, productId, size, color])
+  @@index([cartId])
+  @@index([productId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@unique([productId, userId])
+  @@index([productId])
+}
