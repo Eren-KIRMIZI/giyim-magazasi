@@ -28,6 +28,7 @@ export default function CartClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: items.map((item) => ({
+            slug: item.slug,
             name: item.name,
             price: item.price,
             quantity: item.quantity,

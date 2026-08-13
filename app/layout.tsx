@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ScrollProvider from "@/components/providers/ScrollProvider";
+import AuthProvider from "@/components/providers/AuthProvider";
 
 const geist = Geist({
   variable: "--font-geist",
@@ -61,11 +62,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="bg-surface text-on-surface font-body-md min-h-screen flex flex-col">
-        <ScrollProvider>
-          <Header />
-          <main className="flex-grow">{children}</main>
-          <Footer />
-        </ScrollProvider>
+        <AuthProvider>
+          <ScrollProvider>
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+          </ScrollProvider>
+        </AuthProvider>
       </body>
     </html>
   );

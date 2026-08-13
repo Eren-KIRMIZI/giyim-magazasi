@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
+import { auth } from "@/lib/auth";
 
 interface CheckoutLineItem {
+  slug: string;
   name: string;
   price: number;
   quantity: number;
@@ -37,9 +39,19 @@ export async function POST(request: Request) {
     process.env.NEXT_PUBLIC_APP_URL ??
     "http://localhost:3000";
 
+  const authSession = await auth();
+  const metadata: Record<string, string> = {};
+  if (authSession?.user?.id) {
+    metadata.userId = authSession.user.id;
+    metadata.items = JSON.stringify(
+      items.map((i) => ({ s: i.slug, z: i.size ?? null, q: i.quantity }))
+    );
+  }
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      metadata,
       line_items: items.map((item) => ({
         quantity: item.quantity,
         price_data: {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/store/cart";
 import { brandLogo } from "@/lib/data";
 
@@ -18,6 +19,9 @@ export default function Header() {
   const itemCount = useCartStore((s) =>
     s.items.reduce((n, item) => n + item.quantity, 0)
   );
+  const { data: session, status } = useSession();
+  const userName =
+    session?.user?.name?.split(" ")[0] ?? session?.user?.email?.split("@")[0] ?? "";
 
   return (
     <nav className="bg-surface dark:bg-surface w-full top-0 sticky z-50 border-b border-on-surface dark:border-outline">
@@ -59,12 +63,33 @@ export default function Header() {
           >
             <span className="material-symbols-outlined">search</span>
           </button>
-          <button
-            aria-label="Profile"
-            className="hover:text-primary dark:hover:text-primary-fixed-dim transition-all duration-150 p-2 hidden md:block"
-          >
-            <span className="material-symbols-outlined">person</span>
-          </button>
+          {status === "authenticated" ? (
+            <div className="hidden md:flex items-center gap-stack-sm">
+              <Link
+                href="/hesabim"
+                className="font-label-mono text-label-mono uppercase text-on-surface dark:text-on-surface-variant hover:text-primary transition-colors"
+              >
+                {userName}
+              </Link>
+              <button
+                type="button"
+                aria-label="Sign Out"
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="hover:text-primary dark:hover:text-primary-fixed-dim transition-all duration-150 p-2"
+                title="Çıkış"
+              >
+                <span className="material-symbols-outlined">logout</span>
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/giris"
+              aria-label="Profile"
+              className="hover:text-primary dark:hover:text-primary-fixed-dim transition-all duration-150 p-2 hidden md:block"
+            >
+              <span className="material-symbols-outlined">person</span>
+            </Link>
+          )}
           <Link
             href="/sepet"
             aria-label="Shopping Bag"
