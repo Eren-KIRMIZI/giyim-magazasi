@@ -10,14 +10,24 @@ export interface CartItem {
   price: number;
   image: string;
   size: string;
+  color?: string;
   quantity: number;
+}
+
+export function cartItemKey(item: Pick<CartItem, "productId" | "size" | "color">) {
+  return `${item.productId}::${item.size}::${item.color ?? ""}`;
 }
 
 interface CartState {
   items: CartItem[];
   addItem: (item: Omit<CartItem, "quantity">) => void;
-  removeItem: (productId: string, size: string) => void;
-  updateQuantity: (productId: string, size: string, quantity: number) => void;
+  removeItem: (productId: string, size: string, color?: string) => void;
+  updateQuantity: (
+    productId: string,
+    size: string,
+    quantity: number,
+    color?: string
+  ) => void;
   clearCart: () => void;
   setItems: (items: CartItem[]) => void;
 }
@@ -28,12 +38,12 @@ export const useCartStore = create<CartState>()(
       items: [],
       addItem: (item) => {
         const existing = get().items.find(
-          (i) => i.productId === item.productId && i.size === item.size
+          (i) => cartItemKey(i) === cartItemKey(item)
         );
         if (existing) {
           set({
             items: get().items.map((i) =>
-              i.productId === item.productId && i.size === item.size
+              cartItemKey(i) === cartItemKey(item)
                 ? { ...i, quantity: i.quantity + 1 }
                 : i
             ),
@@ -42,27 +52,25 @@ export const useCartStore = create<CartState>()(
           set({ items: [...get().items, { ...item, quantity: 1 }] });
         }
       },
-      removeItem: (productId, size) => {
+      removeItem: (productId, size, color) => {
         set({
           items: get().items.filter(
-            (i) => !(i.productId === productId && i.size === size)
+            (i) =>
+              cartItemKey(i) !== cartItemKey({ productId, size, color })
           ),
         });
       },
-      updateQuantity: (productId, size, quantity) => {
+      updateQuantity: (productId, size, quantity, color) => {
+        const key = cartItemKey({ productId, size, color });
         if (quantity <= 0) {
           set({
-            items: get().items.filter(
-              (i) => !(i.productId === productId && i.size === size)
-            ),
+            items: get().items.filter((i) => cartItemKey(i) !== key),
           });
           return;
         }
         set({
           items: get().items.map((i) =>
-            i.productId === productId && i.size === size
-              ? { ...i, quantity }
-              : i
+            cartItemKey(i) === key ? { ...i, quantity } : i
           ),
         });
       },

@@ -38,23 +38,27 @@ export default function ReviewsSection({ productId }: { productId: string }) {
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const loadReviews = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/reviews?productId=${productId}`, {
-        cache: "no-store",
-      });
-      const data = await res.json();
-      setReviews(Array.isArray(data.reviews) ? data.reviews : []);
-    } catch {
-      setReviews([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadReviews();
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const res = await fetch(`/api/reviews?productId=${productId}`, {
+          cache: "no-store",
+        });
+        const data = await res.json();
+        if (!cancelled) {
+          setReviews(Array.isArray(data.reviews) ? data.reviews : []);
+        }
+      } catch {
+        if (!cancelled) setReviews([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
   }, [productId]);
 
   const average =

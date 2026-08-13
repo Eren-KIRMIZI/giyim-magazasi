@@ -16,7 +16,10 @@ export default function CartSync() {
   const setItems = useCartStore((s) => s.setItems);
   const lastUserId = useRef<string | null>(null);
   const itemsRef = useRef(items);
-  itemsRef.current = items;
+
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
 
   useEffect(() => {
     if (status !== "authenticated" || !userId) return;

@@ -23,8 +23,9 @@ Brutalist tasarımlı, tam yığın (full-stack) e-ticaret mağazası. Next.js 1
 - **Hesap sayfası:** `/hesabim` — girişli kullanıcının sipariş geçmişi; authsuz kullanıcılar `/giris`'e yönlendirilir.
 - **Sepet:** Zustand + localStorage kalıcılığı, girişli kullanıcılarda Redis'e senkronizasyon (`/api/cart/sync`, TTL 30 gün); giriş yapınca sunucu+yerel sepet birleştirilir (debounce'lu push).
 - **Yorumlar:** Girişli kullanıcı ürün başına bir yorum/puan bırakabilir (upsert), hız sınırı 10/saat, ortalama puan gösterimi.
-- **Stripe Checkout:** Sepet içeriği metadata'da taşınır; webhook `checkout.session.completed` ile sipariş + sipariş kalemlerini idempotent (stripeSessionId benzersiz) oluşturur.
-- **Admin paneli:** `/admin` — sadece ADMIN rolüne açık (guard'lı layout). Dashboard istatistikleri, ürün CRUD (oluştur/düzenle/sil), sipariş durumu yönetimi (PENDING→CANCELLED).
+- **Stripe Checkout (production-safe):** Sepet içeriği sunucuda doğrulanır, fiyatlar DB'den okunur; checkout'ta varyant bazlı **stok rezervasyonu** yapılır (race-condition'a karşı atomik koşullu azaltma, `OrderReservation` tablosu). Webhook `checkout.session.completed` → sipariş + kalem snapshot'ları ile oluşturur (idempotent, `stripeSessionId` benzersiz); `expired` / `async_payment_failed` → stok iade; `charge.refunded` → stok geri + REFUNDED. Siparişler `orderNumber` (`LD-2026-XXXXXX`) taşır ve ürün fiyatı/adı sonradan değişse bile bozulmaz (kalemlerde snapshot).
+- **Sipariş detayları:** Kullanıcı `/hesabim/[orderNumber]`, admin `/admin/siparisler/[id]` (durum geçişi, iptal/iade stok yönetimi, filtreleme/arama).
+- **Admin paneli:** `/admin` — sadece ADMIN rolüne açık (guard'lı layout). Dashboard istatistikleri, ürün CRUD (oluştur/düzenle/sil), sipariş durumu yönetimi (PENDING→CANCELLED/REFUNDED, iptal/iadede stok geri yükleme).
 - **Rate limiting:** Redis tabanlı hız sınırı (kayıt 10/15dk, yorum 10/saat). Redis yokken fail-open.
 
 ## Kurulum
@@ -124,11 +125,12 @@ prisma/
 - `User` — hesap, rol (ADMIN/CUSTOMER), bcrypt parola hash'i
 - `Account` / `Session` / `VerificationToken` — Auth.js adaptör tabloları
 - `Category` / `Product` / `ProductImage` / `ProductVariant` — katalog; varyant `productId+size+color` benzersiz
-- `Order` / `OrderItem` — siparişler; `stripeSessionId` benzersiz (idempotent webhook)
+- `Order` / `OrderItem` — siparişler; `orderNumber` + `stripeSessionId` + `stripePaymentIntentId` benzersiz; kalemlerde ürün adı/fiyat/SKU/görsel snapshot'ı (fiyat değişse de sipariş korunur); `stockConsumed`/`stockRestored` bayrakları
+- `OrderReservation` — checkout'ta rezerve edilen stok kaydı (ACTIVE → CONSUMED/RELEASED); webhook buradan siparişi kurar veya süresi dolunca stoku iade eder
 - `Cart` / `CartItem` — DB sepet şeması (aktif senkronizasyon Redis üzerinden)
 - `Review` — `productId+userId` benzersiz (kullanıcı ürün başına bir yorum)
 
-Ürün durumu: `ACTIVE` | `DRAFT` | `SOLD_OUT`; rozetler: `NEW` | `LIMITED` | `SOLD OUT`.
+Ürün durumu: `ACTIVE` | `DRAFT` | `SOLD_OUT`; rozetler: `NEW` | `LIMITED` | `SOLD OUT` (toplam varyant stoku 0 olduğunda otomatik SOLD OUT). Sipariş durumu: `PENDING` | `PAID` | `SHIPPED` | `DELIVERED` | `CANCELLED` | `REFUNDED` | `FAILED`.
 
 ## API Route'ları
 
@@ -142,7 +144,14 @@ prisma/
 | GET/POST | `/api/auth/[...nextauth]` | Auth.js handler'ı |
 | POST | `/api/admin/products` | Ürün oluştur (ADMIN) |
 | PUT/DELETE | `/api/admin/products/[id]` | Ürün güncelle/sil (ADMIN) |
-| PATCH | `/api/admin/orders/[id]` | Sipariş durumu güncelle (ADMIN) |
+| PATCH | `/api/admin/orders/[id]` | Sipariş durumu güncelle (ADMIN; iptal/iadede stok geri yüklenir) |
+
+## Test
+
+```bash
+npm run test:order   # stok rezervasyonu, sipariş oluşturma, snapshot, idempotency,
+                     # iade/iptal stok geri yükleme, durum geçişleri (canlı DB üzerinde)
+```
 
 ## Scriptler
 
@@ -163,6 +172,7 @@ npx prisma db seed   # veritabanını örnek veriyle doldurur
 
 ## Bilinen sınırlamalar / notlar
 
-- Stripe canlı testi için gerçek key gerekir (yerel geliştirmede `sk_test_...` + webhook CLI).
-- Sipariş stok düşmez; webhook yalnızca ürün slug'ını metadata'dan eşleştirir (ürün silinmişse `productId` boş kalır).
+- Stripe canlı testi için gerçek key gerekir (yerel geliştirmede `sk_test_...` + webhook CLI). Key yokken `/api/checkout` 500, webhook 500 döner.
+- Stripe Checkout üzerinden gönderim adresi toplanmaz (`shippingAddress` şemada durur).
+- Admin ürün görselleri hâlâ URL üzerinden girilir; upload Phase 2 kapsamındadır.
 - Statik tasarım verileri (`hero`, koleksiyon etiketleri) `lib/data.ts`'ten gelir; DB'den bağımsızdır.

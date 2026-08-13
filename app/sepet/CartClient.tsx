@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useCartStore } from "@/store/cart";
+import { useCartStore, cartItemKey } from "@/store/cart";
 import { formatPrice } from "@/lib/data";
 
 export default function CartClient() {
@@ -29,10 +29,9 @@ export default function CartClient() {
         body: JSON.stringify({
           items: items.map((item) => ({
             slug: item.slug,
-            name: item.name,
-            price: item.price,
             quantity: item.quantity,
             size: item.size,
+            color: item.color ?? null,
           })),
         }),
       });
@@ -89,7 +88,7 @@ export default function CartClient() {
         <div className="md:col-span-8 flex flex-col border border-on-surface">
           {items.map((item) => (
             <div
-              key={`${item.productId}-${item.size}`}
+              key={cartItemKey(item)}
               className="flex gap-4 p-stack-md border-b border-on-surface last:border-b-0"
             >
               <Link
@@ -115,11 +114,14 @@ export default function CartClient() {
                     </Link>
                     <div className="font-label-mono text-label-mono uppercase text-on-surface-variant mt-1">
                       Size: {item.size}
+                      {item.color ? ` · ${item.color}` : ""}
                     </div>
                   </div>
                   <button
                     type="button"
-                    onClick={() => removeItem(item.productId, item.size)}
+                    onClick={() =>
+                      removeItem(item.productId, item.size, item.color)
+                    }
                     className="font-label-mono text-label-mono text-on-surface-variant hover:text-error transition-colors self-start"
                   >
                     Remove
@@ -133,7 +135,8 @@ export default function CartClient() {
                         updateQuantity(
                           item.productId,
                           item.size,
-                          item.quantity - 1
+                          item.quantity - 1,
+                          item.color
                         )
                       }
                       className="w-9 h-9 flex items-center justify-center font-label-mono text-label-mono hover:bg-on-surface hover:text-surface transition-colors"
@@ -149,7 +152,8 @@ export default function CartClient() {
                         updateQuantity(
                           item.productId,
                           item.size,
-                          item.quantity + 1
+                          item.quantity + 1,
+                          item.color
                         )
                       }
                       className="w-9 h-9 flex items-center justify-center font-label-mono text-label-mono hover:bg-on-surface hover:text-surface transition-colors"
@@ -204,9 +208,19 @@ export default function CartClient() {
               {checkoutLoading ? "Redirecting..." : "Proceed to Checkout"}
             </button>
             {checkoutError && (
-              <p className="font-label-mono text-label-mono uppercase text-error text-center">
-                {checkoutError}
-              </p>
+              <div className="flex flex-col gap-2 items-center">
+                <p className="font-label-mono text-label-mono uppercase text-error text-center">
+                  {checkoutError}
+                </p>
+                {checkoutError.includes("giriş") && (
+                  <Link
+                    href="/giris"
+                    className="inline-block border border-on-surface px-6 py-2 font-headline-md text-headline-md uppercase hover:bg-on-surface hover:text-surface transition-colors"
+                  >
+                    Giriş Yap
+                  </Link>
+                )}
+              </div>
             )}
             <p className="font-label-mono text-label-mono uppercase text-on-surface-variant text-center">
               Stripe Checkout entegrasyonu — STRIPE_SECRET_KEY ile etkinleşir

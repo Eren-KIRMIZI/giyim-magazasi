@@ -124,17 +124,23 @@ model ProductVariant {
 }
 
 model Order {
-  id            String    @id @default(cuid())
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
-  status        String    @default("PENDING") // PENDING | PAID | SHIPPED | DELIVERED | CANCELLED
-  total         Decimal   @db.Decimal(10, 2)
-  stripeSessionId String?  @unique
-  shippingAddress Json?
-  items         OrderItem[]
+  id                 String    @id @default(cuid())
+  orderNumber        String    @unique @default("")
+  userId             String
+  user               User      @relation(fields: [userId], references: [id])
+  status             String    @default("PENDING") // PENDING | PAID | SHIPPED | DELIVERED | CANCELLED | REFUNDED | FAILED
+  total              Decimal   @db.Decimal(10, 2)
+  stripeSessionId    String?   @unique
+  stripePaymentIntentId String? @unique
+  customerEmail      String?
+  customerName       String?
+  stockConsumed      Boolean   @default(false)
+  stockRestored      Boolean   @default(false)
+  shippingAddress    Json?
+  items              OrderItem[]
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   @@index([userId])
 }
@@ -143,8 +149,13 @@ model OrderItem {
   id        String  @id @default(cuid())
   orderId   String
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product @relation(fields: [productId], references: [id])
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variantId String?
+  name      String  @default("")
+  slug      String?
+  sku       String?
+  image     String?
   quantity  Int
   price     Decimal @db.Decimal(10, 2)
   size      String?
@@ -152,6 +163,17 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+}
+
+model OrderReservation {
+  id              String   @id @default(cuid())
+  stripeSessionId String   @unique
+  userId          String
+  status          String   @default("ACTIVE") // ACTIVE | CONSUMED | RELEASED
+  items           Json
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Cart {

@@ -1,4 +1,5 @@
 import type { CartItem } from "@/store/cart";
+import { cartItemKey } from "@/store/cart";
 
 export async function pullServerCart(): Promise<CartItem[]> {
   try {
@@ -28,15 +29,15 @@ export function mergeCartItems(
   local: CartItem[],
   server: CartItem[]
 ): CartItem[] {
-  const key = (i: CartItem) => `${i.productId}::${i.size}`;
   const merged = new Map<string, CartItem>();
 
   for (const item of server) {
-    merged.set(key(item), item);
+    merged.set(cartItemKey(item), item);
   }
   for (const item of local) {
-    const existing = merged.get(key(item));
-    merged.set(key(item), {
+    const key = cartItemKey(item);
+    const existing = merged.get(key);
+    merged.set(key, {
       ...item,
       quantity: existing
         ? Math.max(existing.quantity, item.quantity)

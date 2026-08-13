@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, ORDER_STATUSES } from "@/lib/admin";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { applyOrderStatusChange, ORDER_STATUSES } from "@/lib/order";
 
 export async function PATCH(
   request: Request,
@@ -24,10 +25,19 @@ export async function PATCH(
     return NextResponse.json({ error: "Geçersiz durum." }, { status: 400 });
   }
 
-  const order = await prisma.order.update({
+  const order = await prisma.order.findUnique({
     where: { id },
-    data: { status: body.status },
+    include: { items: true },
   });
+  if (!order) {
+    return NextResponse.json({ error: "Sipariş bulunamadı." }, { status: 404 });
+  }
 
-  return NextResponse.json({ order });
+  const result = await applyOrderStatusChange(order, body.status);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 409 });
+  }
+
+  const updated = await prisma.order.findUnique({ where: { id } });
+  return NextResponse.json({ order: updated });
 }

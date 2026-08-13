@@ -34,6 +34,11 @@ function mapProduct(p: DbProduct): Product {
   );
 
   const sizes = Array.from(new Set(p.variants.map((v) => v.size)));
+  const totalStock = p.variants.reduce((n, v) => n + v.stock, 0);
+  const badge: Product["badge"] =
+    totalStock <= 0
+      ? "SOLD OUT"
+      : ((p.badge as Product["badge"]) ?? undefined);
 
   return {
     id: p.id,
@@ -44,7 +49,7 @@ function mapProduct(p: DbProduct): Product {
     price: Number(p.price),
     category: p.category.slug,
     categoryLabel: p.category.name,
-    badge: (p.badge as Product["badge"]) ?? undefined,
+    badge,
     colors: colors.map((name) => ({
       name,
       hex: COLOR_HEX[name] ?? "#1b1c1c",

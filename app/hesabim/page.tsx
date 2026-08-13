@@ -62,10 +62,15 @@ export default async function HesabimPage() {
           ) : (
             <div className="flex flex-col border border-on-surface divide-y divide-on-surface">
               {orders.map((order) => (
-                <div key={order.id} className="p-stack-md flex flex-col gap-stack-sm">
+                <Link
+                  key={order.id}
+                  href={`/hesabim/${order.orderNumber || order.id}`}
+                  className="p-stack-md flex flex-col gap-stack-sm hover:bg-surface-container transition-colors"
+                >
                   <div className="flex justify-between items-center gap-4">
                     <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
-                      {order.createdAt.toLocaleDateString("tr-TR")} · {order.id.slice(-6)}
+                      {order.createdAt.toLocaleDateString("tr-TR")} ·{" "}
+                      {order.orderNumber || order.id.slice(-6)}
                     </span>
                     <span className="font-label-mono text-label-mono uppercase text-primary">
                       {order.status}
@@ -79,7 +84,7 @@ export default async function HesabimPage() {
                       €{Number(order.total).toFixed(2).replace(".", ",")}
                     </span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

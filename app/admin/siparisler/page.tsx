@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { ORDER_STATUSES, ORDER_STATUS_LABELS } from "@/lib/order";
 import OrderStatus from "./OrderStatus";
 
 export const metadata: Metadata = {
@@ -7,12 +10,34 @@ export const metadata: Metadata = {
   description: "Sipariş yönetimi.",
 };
 
-export default async function AdminOrdersPage() {
+export default async function AdminOrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; q?: string }>;
+}) {
+  const params = await searchParams;
+  const status = params.status ?? "";
+  const q = (params.q ?? "").trim();
+
+  const where: Prisma.OrderWhereInput = {};
+  if (status && (ORDER_STATUSES as readonly string[]).includes(status)) {
+    where.status = status;
+  }
+  if (q) {
+    where.OR = [
+      { orderNumber: { contains: q, mode: "insensitive" } },
+      { customerEmail: { contains: q, mode: "insensitive" } },
+      { customerName: { contains: q, mode: "insensitive" } },
+      { user: { email: { contains: q, mode: "insensitive" } } },
+    ];
+  }
+
   const orders = await prisma.order.findMany({
+    where,
     orderBy: { createdAt: "desc" },
     include: {
       user: { select: { email: true } },
-      items: { include: { product: { select: { name: true } } } },
+      items: true,
     },
   });
 
@@ -22,24 +47,66 @@ export default async function AdminOrdersPage() {
         Siparişler
       </h1>
 
+      <form
+        method="get"
+        className="flex flex-wrap items-end gap-4 border border-on-surface p-stack-md"
+      >
+        <label className="flex flex-col gap-1 font-label-mono text-label-mono uppercase">
+          Durum
+          <select
+            name="status"
+            defaultValue={status}
+            className="border border-on-surface bg-transparent px-3 py-2 font-label-mono text-label-mono uppercase text-on-surface focus:outline-none focus:border-primary"
+          >
+            <option value="">Tümü</option>
+            {ORDER_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {ORDER_STATUS_LABELS[s] ?? s} ({s})
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 font-label-mono text-label-mono uppercase flex-1">
+          Ara (no / e-posta / isim)
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder="LD-2026-…"
+            className="border border-on-surface bg-transparent px-3 py-2 font-label-mono text-label-mono text-on-surface placeholder:text-outline focus:outline-none focus:border-primary"
+          />
+        </label>
+        <button
+          type="submit"
+          className="border border-on-surface bg-on-surface text-surface px-6 py-2 font-headline-md text-headline-md uppercase hover:bg-primary transition-colors"
+        >
+          Filtrele
+        </button>
+      </form>
+
       {orders.length === 0 ? (
         <div className="border border-on-surface p-stack-md font-body-md text-body-md text-on-surface-variant">
-          Henüz sipariş yok.
+          Sipariş bulunamadı.
         </div>
       ) : (
         <div className="flex flex-col border border-on-surface divide-y divide-on-surface">
           {orders.map((order) => (
-            <div key={order.id} className="p-stack-md flex flex-col gap-3">
+            <div
+              key={order.id}
+              className="p-stack-md flex flex-col gap-3 hover:bg-surface-container transition-colors"
+            >
               <div className="flex flex-wrap justify-between items-center gap-4">
-                <div className="flex flex-col gap-1">
+                <Link
+                  href={`/admin/siparisler/${order.id}`}
+                  className="flex flex-col gap-1"
+                >
                   <span className="font-label-mono text-label-mono uppercase text-on-surface">
-                    {order.user.email}
+                    {order.orderNumber}
                   </span>
                   <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
-                    {order.id.slice(-6)} ·{" "}
-                    {order.createdAt.toLocaleDateString("tr-TR")}
+                    {order.customerEmail ?? order.user.email} ·{" "}
+                    {order.createdAt.toLocaleString("tr-TR")}
                   </span>
-                </div>
+                </Link>
                 <div className="flex items-center gap-4">
                   <span className="font-label-mono text-label-mono uppercase text-on-surface">
                     €{Number(order.total).toFixed(2).replace(".", ",")}
@@ -53,8 +120,9 @@ export default async function AdminOrdersPage() {
                     key={item.id}
                     className="font-label-mono text-label-mono uppercase text-on-surface-variant border border-on-surface px-2 py-1"
                   >
-                    {item.product.name} × {item.quantity}
+                    {item.name} × {item.quantity}
                     {item.size ? ` (${item.size})` : ""}
+                    {item.color ? ` · ${item.color}` : ""}
                   </span>
                 ))}
               </div>

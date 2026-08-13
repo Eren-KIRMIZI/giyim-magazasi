@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import {
+  createOrderFromReservation,
+  releaseReservation,
+  releaseStock,
+  RESERVATION_STATUS,
+  type ReservationLine,
+} from "@/lib/order";
 
 export async function POST(request: Request) {
   const stripe = getStripe();
@@ -38,59 +45,131 @@ export async function POST(request: Request) {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
-      const userId = session.metadata?.userId;
-      const rawItems = session.metadata?.items;
+      const stripeSessionId = session.id;
 
-      if (!userId || !rawItems) {
-        console.log("Checkout completed for session:", session.id, "(no order metadata)");
+      const existing = await prisma.order.findUnique({
+        where: { stripeSessionId },
+      });
+      if (existing) break;
+
+      const reservation = await prisma.orderReservation.findUnique({
+        where: { stripeSessionId },
+      });
+      if (!reservation) {
+        console.log("No reservation for session:", stripeSessionId);
+        break;
+      }
+      if (reservation.status === RESERVATION_STATUS.RELEASED) {
+        console.log(
+          "Payment completed after reservation released:",
+          stripeSessionId
+        );
+        break;
+      }
+
+      const paymentIntent =
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : null;
+
+      const total = (reservation.items as unknown as ReservationLine[]).reduce(
+        (sum, l) => sum + l.unitPrice * l.quantity,
+        0
+      );
+      const expectedTotal = session.amount_total ? session.amount_total / 100 : null;
+      if (expectedTotal !== null && Math.abs(expectedTotal - total) > 0.01) {
+        console.error(
+          `Amount mismatch for ${stripeSessionId}: stripe=${expectedTotal} reservation=${total}`
+        );
+      }
+
+      try {
+        await createOrderFromReservation(reservation, "PAID", {
+          stripeSessionId,
+          paymentIntent,
+          stockConsumed: true,
+        });
+        console.log("Order created for session:", stripeSessionId);
+      } catch (err) {
+        console.error("Order creation failed:", err);
+        return NextResponse.json({ error: "Order creation failed" }, { status: 500 });
+      }
+      break;
+    }
+
+    case "checkout.session.async_payment_failed":
+    case "checkout.session.expired": {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const stripeSessionId = session.id;
+      const status =
+        event.type === "checkout.session.expired" ? "CANCELLED" : "FAILED";
+
+      const existing = await prisma.order.findUnique({
+        where: { stripeSessionId },
+      });
+      if (existing) break;
+
+      await releaseReservation(stripeSessionId);
+
+      const reservation = await prisma.orderReservation.findUnique({
+        where: { stripeSessionId },
+      });
+      if (!reservation || reservation.status !== RESERVATION_STATUS.RELEASED) {
         break;
       }
 
       try {
-        const existing = await prisma.order.findUnique({
-          where: { stripeSessionId: session.id },
+        await createOrderFromReservation(reservation, status, {
+          stripeSessionId,
+          paymentIntent: null,
+          stockConsumed: false,
         });
-        if (existing) break;
-
-        const items = JSON.parse(rawItems) as {
-          s: string;
-          z: string | null;
-          q: number;
-        }[];
-        const products = await prisma.product.findMany({
-          where: { slug: { in: items.map((i) => i.s) } },
-        });
-        const productBySlug = new Map(products.map((p) => [p.slug, p]));
-
-        await prisma.order.create({
-          data: {
-            userId,
-            stripeSessionId: session.id,
-            status: "PAID",
-            total: session.amount_total ? session.amount_total / 100 : 0,
-            items: {
-              create: items.map((i) => {
-                const product = productBySlug.get(i.s);
-                return {
-                  productId: product?.id ?? "",
-                  quantity: i.q,
-                  price: product?.price ?? 0,
-                  size: i.z,
-                };
-              }),
-            },
-          },
-        });
-        console.log("Order created for session:", session.id);
+        console.log(`Order marked ${status} for session:`, stripeSessionId);
       } catch (err) {
-        console.error("Order creation failed:", err);
+        console.error(`Order ${status} creation failed:`, err);
+        return NextResponse.json({ error: "Order status record failed" }, { status: 500 });
       }
       break;
     }
-    case "checkout.session.expired": {
-      console.log("Checkout session expired:", event.data.object.id);
+
+    case "charge.refunded": {
+      const charge = event.data.object as Stripe.Charge;
+      const pi = charge.payment_intent;
+      const paymentIntentId =
+        typeof pi === "string" ? pi : pi && typeof pi === "object" ? pi.id : null;
+      if (!paymentIntentId) break;
+
+      const order = await prisma.order.findUnique({
+        where: { stripePaymentIntentId: paymentIntentId },
+        include: { items: true },
+      });
+      if (!order || order.stockRestored) break;
+
+      try {
+        await prisma.$transaction(async (tx) => {
+          const updated = await tx.order.updateMany({
+            where: { id: order.id, stockRestored: false },
+            data: { stockRestored: true, status: "REFUNDED" },
+          });
+          if (updated.count === 1) {
+            await releaseStock(
+              tx,
+              order.items.map((i) => ({
+                variantId: i.variantId ?? "",
+                productId: i.productId ?? "",
+                quantity: i.quantity,
+              }))
+            );
+          }
+        });
+        console.log("Refund handled for order:", order.orderNumber);
+      } catch (err) {
+        console.error("Refund handling failed:", err);
+        return NextResponse.json({ error: "Refund handling failed" }, { status: 500 });
+      }
       break;
     }
+
     default:
       break;
   }

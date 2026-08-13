@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCartStore } from "@/store/cart";
 
@@ -19,7 +20,10 @@ export default function CheckoutNotice() {
   if (success === "1") {
     return (
       <div className="border border-on-surface bg-primary text-on-primary px-margin-mobile py-stack-md font-headline-md text-headline-md uppercase">
-        Payment successful. Your order has been placed.
+        Payment successful. Your order has been placed.{" "}
+        <Link href="/hesabim" className="underline">
+          Siparişlerimi gör
+        </Link>
       </div>
     );
   }

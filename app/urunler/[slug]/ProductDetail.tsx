@@ -24,6 +24,9 @@ export default function ProductDetail({
       ? null
       : (product.sizes[0] ?? null)
   );
+  const [activeColor, setActiveColor] = useState<string | null>(
+    product.colors?.[0]?.name ?? null
+  );
   const [added, setAdded] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
 
@@ -48,6 +51,7 @@ export default function ProductDetail({
       price: product.price,
       image: product.images[0].src,
       size: activeSize,
+      color: activeColor ?? undefined,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -145,6 +149,39 @@ export default function ProductDetail({
                 })}
               </div>
             </div>
+
+            {product.colors && product.colors.length > 1 && (
+              <div className="mb-stack-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-label-mono text-label-mono uppercase">
+                    Color
+                  </span>
+                  <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
+                    {activeColor ?? "—"}
+                  </span>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {product.colors.map((color) => (
+                    <button
+                      key={color.name}
+                      type="button"
+                      onClick={() => setActiveColor(color.name)}
+                      title={color.name}
+                      className={`w-9 h-9 border flex items-center justify-center transition-colors cursor-pointer ${
+                        activeColor === color.name
+                          ? "border-on-surface ring-2 ring-primary"
+                          : "border-outline hover:border-on-surface"
+                      }`}
+                    >
+                      <span
+                        className="w-5 h-5"
+                        style={{ backgroundColor: color.hex }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-stack-sm">

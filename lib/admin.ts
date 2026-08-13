@@ -6,14 +6,6 @@ export async function requireAdmin() {
   return session;
 }
 
-export const ORDER_STATUSES = [
-  "PENDING",
-  "PAID",
-  "SHIPPED",
-  "DELIVERED",
-  "CANCELLED",
-] as const;
-
 export function slugify(text: string): string {
   return text
     .toLowerCase()
