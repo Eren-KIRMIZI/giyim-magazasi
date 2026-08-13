@@ -1,0 +1,177 @@
+"use client";
+
+import Link from "next/link";
+import Image from "next/image";
+import { useCartStore } from "@/store/cart";
+import { formatPrice } from "@/lib/data";
+
+export default function CartClient() {
+  const items = useCartStore((s) => s.items);
+  const updateQuantity = useCartStore((s) => s.updateQuantity);
+  const removeItem = useCartStore((s) => s.removeItem);
+  const clearCart = useCartStore((s) => s.clearCart);
+
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  if (items.length === 0) {
+    return (
+      <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col items-center justify-center gap-stack-md min-h-[50vh]">
+        <h1 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg uppercase text-on-surface">
+          Your Bag is Empty
+        </h1>
+        <p className="font-body-lg text-body-lg text-on-surface-variant">
+          The archive awaits. Secure your drop before it&apos;s gone.
+        </p>
+        <Link
+          href="/koleksiyonlar"
+          className="inline-block bg-on-surface text-surface font-headline-md text-headline-md uppercase px-8 py-4 hover:bg-primary transition-colors duration-200"
+        >
+          Shop Now
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+      <div className="flex justify-between items-end mb-stack-md border-b border-on-surface pb-stack-sm">
+        <h1 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg uppercase text-on-surface">
+          Shopping Bag
+        </h1>
+        <button
+          type="button"
+          onClick={clearCart}
+          className="font-label-mono text-label-mono uppercase text-on-surface-variant hover:text-error transition-colors"
+        >
+          Clear All
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+        <div className="md:col-span-8 flex flex-col border border-on-surface">
+          {items.map((item) => (
+            <div
+              key={`${item.productId}-${item.size}`}
+              className="flex gap-4 p-stack-md border-b border-on-surface last:border-b-0"
+            >
+              <Link
+                href={`/urunler/${item.slug}`}
+                className="relative w-24 h-32 flex-shrink-0 bg-surface-container overflow-hidden"
+              >
+                <Image
+                  src={item.image}
+                  alt={item.name}
+                  fill
+                  sizes="96px"
+                  className="object-cover"
+                />
+              </Link>
+              <div className="flex flex-col justify-between flex-1 gap-2">
+                <div className="flex justify-between gap-4">
+                  <div>
+                    <Link
+                      href={`/urunler/${item.slug}`}
+                      className="font-label-mono text-label-mono uppercase text-on-surface hover:text-primary transition-colors"
+                    >
+                      {item.name}
+                    </Link>
+                    <div className="font-label-mono text-label-mono uppercase text-on-surface-variant mt-1">
+                      Size: {item.size}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.productId, item.size)}
+                    className="font-label-mono text-label-mono text-on-surface-variant hover:text-error transition-colors self-start"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center border border-on-surface">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateQuantity(
+                          item.productId,
+                          item.size,
+                          item.quantity - 1
+                        )
+                      }
+                      className="w-9 h-9 flex items-center justify-center font-label-mono text-label-mono hover:bg-on-surface hover:text-surface transition-colors"
+                    >
+                      -
+                    </button>
+                    <span className="w-9 h-9 flex items-center justify-center font-label-mono text-label-mono">
+                      {item.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateQuantity(
+                          item.productId,
+                          item.size,
+                          item.quantity + 1
+                        )
+                      }
+                      className="w-9 h-9 flex items-center justify-center font-label-mono text-label-mono hover:bg-on-surface hover:text-surface transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <div className="font-label-mono text-label-mono uppercase">
+                    {formatPrice(item.price * item.quantity)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="md:col-span-4">
+          <div className="border border-on-surface bg-surface p-stack-md flex flex-col gap-stack-md">
+            <h2 className="font-headline-md text-headline-md uppercase border-b border-on-surface pb-stack-sm">
+              Order Summary
+            </h2>
+            <div className="flex justify-between items-center">
+              <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
+                Subtotal
+              </span>
+              <span className="font-label-mono text-label-mono uppercase text-on-surface">
+                {formatPrice(subtotal)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
+                Shipping
+              </span>
+              <span className="font-label-mono text-label-mono uppercase text-on-surface">
+                Calculated at checkout
+              </span>
+            </div>
+            <div className="flex justify-between items-center border-t border-on-surface pt-stack-sm">
+              <span className="font-headline-md text-headline-md uppercase">
+                Total
+              </span>
+              <span className="font-headline-md text-headline-md uppercase">
+                {formatPrice(subtotal)}
+              </span>
+            </div>
+            <button
+              type="button"
+              className="w-full bg-on-surface text-surface font-headline-md text-headline-md uppercase py-4 hover:bg-primary hover:text-on-primary transition-colors"
+            >
+              Proceed to Checkout
+            </button>
+            <p className="font-label-mono text-label-mono uppercase text-on-surface-variant text-center">
+              Checkout integration coming with Stripe
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
