@@ -2,19 +2,18 @@
 
 import { useMemo, useState } from "react";
 import ProductCard from "@/components/store/ProductCard";
-import { products } from "@/lib/data";
-
-const CATEGORIES = [
-  { value: "hoodies", label: "Hoodies" },
-  { value: "tees", label: "Tees" },
-  { value: "bottoms", label: "Bottoms" },
-  { value: "footwear", label: "Footwear" },
-  { value: "accessories", label: "Accessories" },
-];
+import type { Product } from "@/lib/data";
 
 const SIZES = ["S", "M", "L", "XL"];
 
-export default function CollectionsClient() {
+export default function CollectionsClient({ products }: { products: Product[] }) {
+  const categories = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const p of products) {
+      if (!seen.has(p.category)) seen.set(p.category, p.categoryLabel);
+    }
+    return Array.from(seen, ([value, label]) => ({ value, label }));
+  }, [products]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
@@ -55,7 +54,7 @@ export default function CollectionsClient() {
       if (maxPrice !== "" && p.price > Number(maxPrice)) return false;
       return true;
     });
-  }, [selectedCategories, selectedSizes, minPrice, maxPrice]);
+  }, [selectedCategories, selectedSizes, minPrice, maxPrice, products]);
 
   const filterPanel = (
     <aside className="flex flex-col gap-stack-md">
@@ -67,7 +66,7 @@ export default function CollectionsClient() {
           Category
         </h3>
         <ul className="flex flex-col gap-2">
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <li key={cat.value}>
               <label className="flex items-center gap-2 cursor-pointer font-body-md text-body-md">
                 <input

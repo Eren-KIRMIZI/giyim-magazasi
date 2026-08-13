@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import CollectionsClient from "./CollectionsClient";
+import { getAllProducts } from "@/lib/catalog";
 
 export const metadata: Metadata = {
   title: "Collections",
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
     "Browse the LAST DANCE archive — hoodies, tees, bottoms, footwear and accessories.",
 };
 
-export default function CollectionsPage() {
-  return <CollectionsClient />;
+export default async function CollectionsPage() {
+  const products = await getAllProducts();
+  return <CollectionsClient products={products} />;
 }

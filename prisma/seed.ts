@@ -21,6 +21,7 @@ async function main() {
       update: {
         name: p.name,
         description: p.description,
+        subtitle: p.subtitle,
         price: p.price,
         status: p.badge === "SOLD OUT" ? "SOLD_OUT" : "ACTIVE",
         badge: p.badge ?? null,
@@ -29,6 +30,7 @@ async function main() {
         slug: p.slug,
         name: p.name,
         description: p.description,
+        subtitle: p.subtitle,
         price: p.price,
         stock: 25,
         status: p.badge === "SOLD OUT" ? "SOLD_OUT" : "ACTIVE",

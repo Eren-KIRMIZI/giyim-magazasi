@@ -1,10 +1,10 @@
 import Link from "next/link";
 import ProductCard from "@/components/store/ProductCard";
 import Reveal from "@/components/animations/Reveal";
-import { getFeaturedProducts } from "@/lib/data";
+import { getNewArrivals } from "@/lib/catalog";
 
-export default function NewArrivalsSection() {
-  const featured = getFeaturedProducts();
+export default async function NewArrivalsSection() {
+  const featured = await getNewArrivals(3);
 
   return (
     <section
