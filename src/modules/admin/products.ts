@@ -1,4 +1,5 @@
 import { prisma } from "@/infrastructure/prisma";
+import { slugify } from "@/lib/utils";
 
 export interface AdminProductRow {
   id: string;
@@ -90,4 +91,240 @@ export async function getProductForEdit(
       stock: v.stock,
     })),
   };
+}
+
+export class AdminProductValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AdminProductValidationError";
+  }
+}
+
+export class AdminProductSlugConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AdminProductSlugConflictError";
+  }
+}
+
+export class AdminProductCategoryError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AdminProductCategoryError";
+  }
+}
+
+export class AdminProductNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AdminProductNotFoundError";
+  }
+}
+
+export class AdminProductInUseError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AdminProductInUseError";
+  }
+}
+
+interface VariantInput {
+  size: string;
+  color?: string | null;
+  stock: number;
+}
+
+interface ImageInput {
+  url: string;
+  alt?: string | null;
+}
+
+function parseVariantLines(lines: string[]): VariantInput[] {
+  const variants: VariantInput[] = [];
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    const [size, color, stockRaw] = line.split("|").map((s) => s.trim());
+    if (!size) continue;
+    variants.push({
+      size,
+      color: color || null,
+      stock: Number(stockRaw) > 0 ? Number(stockRaw) : 0,
+    });
+  }
+  return variants;
+}
+
+function parseImageLines(lines: string[]): ImageInput[] {
+  const images: ImageInput[] = [];
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    const [url, alt] = line.split("|").map((s) => s.trim());
+    if (url) images.push({ url, alt: alt || null });
+  }
+  return images;
+}
+
+function productDataFromBody(body: Record<string, unknown>, slug: string) {
+  return {
+    slug,
+    name: String(body.name ?? "").trim(),
+    subtitle: String(body.subtitle ?? ""),
+    description: String(body.description ?? ""),
+    price: Number(body.price),
+    compareAtPrice:
+      body.compareAtPrice !== undefined && Number(body.compareAtPrice) > 0
+        ? Number(body.compareAtPrice)
+        : null,
+    stock: Number(body.stock) > 0 ? Number(body.stock) : 0,
+    status: ["ACTIVE", "DRAFT", "SOLD_OUT"].includes(String(body.status))
+      ? String(body.status)
+      : "DRAFT",
+    badge: ["NEW", "LIMITED", "SOLD OUT"].includes(String(body.badge))
+      ? String(body.badge)
+      : null,
+  };
+}
+
+export async function createProduct(body: Record<string, unknown>) {
+  const name = String(body.name ?? "").trim();
+  const price = Number(body.price);
+  if (!name || !Number.isFinite(price) || price <= 0) {
+    throw new AdminProductValidationError(
+      "Ürün adı ve geçerli bir fiyat gereklidir."
+    );
+  }
+
+  const slug = String(body.slug ?? "").trim() || slugify(name);
+  const categoryId = String(body.categoryId ?? "");
+
+  const existing = await prisma.product.findUnique({ where: { slug } });
+  if (existing) {
+    throw new AdminProductSlugConflictError(`"${slug}" slug'u zaten kullanımda.`);
+  }
+
+  const category = await prisma.category.findUnique({
+    where: { id: categoryId },
+  });
+  if (!category) {
+    throw new AdminProductCategoryError("Kategori bulunamadı.");
+  }
+
+  const images = parseImageLines(
+    Array.isArray(body.images) ? body.images.map(String) : []
+  );
+  const variants = parseVariantLines(
+    Array.isArray(body.variants) ? body.variants.map(String) : []
+  );
+
+  return prisma.product.create({
+    data: {
+      ...productDataFromBody(body, slug),
+      categoryId: category.id,
+      images: {
+        create: images.map((img, i) => ({
+          url: img.url,
+          alt: img.alt,
+          position: i,
+        })),
+      },
+      variants: {
+        create: variants.map((v) => ({
+          size: v.size,
+          color: v.color,
+          sku: `${slug}-${v.size}-${(v.color ?? "default").toLowerCase()}`,
+          stock: v.stock,
+        })),
+      },
+    },
+    include: { category: true, images: true, variants: true },
+  });
+}
+
+export async function updateProduct(id: string, body: Record<string, unknown>) {
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) {
+    throw new AdminProductNotFoundError("Ürün bulunamadı.");
+  }
+
+  const name = String(body.name ?? "").trim();
+  const price = Number(body.price);
+  if (!name || !Number.isFinite(price) || price <= 0) {
+    throw new AdminProductValidationError(
+      "Ürün adı ve geçerli bir fiyat gereklidir."
+    );
+  }
+
+  const slug = String(body.slug ?? "").trim() || slugify(name);
+  if (slug !== product.slug) {
+    const taken = await prisma.product.findUnique({ where: { slug } });
+    if (taken) {
+      throw new AdminProductSlugConflictError(`"${slug}" slug'u zaten kullanımda.`);
+    }
+  }
+
+  const categoryId = String(body.categoryId ?? product.categoryId);
+  const category = await prisma.category.findUnique({
+    where: { id: categoryId },
+  });
+  if (!category) {
+    throw new AdminProductCategoryError("Kategori bulunamadı.");
+  }
+
+  const images = parseImageLines(
+    Array.isArray(body.images) ? body.images.map(String) : []
+  );
+  const variants = parseVariantLines(
+    Array.isArray(body.variants) ? body.variants.map(String) : []
+  );
+
+  return prisma.$transaction(async (tx) => {
+    await tx.productImage.deleteMany({ where: { productId: id } });
+    await tx.productVariant.deleteMany({ where: { productId: id } });
+
+    return tx.product.update({
+      where: { id },
+      data: {
+        ...productDataFromBody(body, slug),
+        status: ["ACTIVE", "DRAFT", "SOLD_OUT"].includes(String(body.status))
+          ? String(body.status)
+          : product.status,
+        categoryId: category.id,
+        images: {
+          create: images.map((img, i) => ({
+            url: img.url,
+            alt: img.alt,
+            position: i,
+          })),
+        },
+        variants: {
+          create: variants.map((v) => ({
+            size: v.size,
+            color: v.color,
+            sku: `${slug}-${v.size}-${(v.color ?? "default").toLowerCase()}`,
+            stock: v.stock,
+          })),
+        },
+      },
+      include: { category: true, images: true, variants: true },
+    });
+  });
+}
+
+export async function deleteProduct(id: string) {
+  const product = await prisma.product.findUnique({
+    where: { id },
+    include: { _count: { select: { orderItems: true, cartItems: true } } },
+  });
+  if (!product) {
+    throw new AdminProductNotFoundError("Ürün bulunamadı.");
+  }
+  if (product._count.orderItems > 0 || product._count.cartItems > 0) {
+    throw new AdminProductInUseError(
+      "Bu ürün sipariş/sepette kullanıldığı için silinemez. Status'ü DRAFT yapın."
+    );
+  }
+
+  await prisma.product.delete({ where: { id } });
 }

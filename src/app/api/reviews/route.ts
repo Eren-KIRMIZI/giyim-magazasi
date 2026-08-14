@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/modules/auth";
-import { prisma } from "@/infrastructure/prisma";
-import { rateLimit } from "@/infrastructure/redis/rate-limit";
+import {
+  getProductReviews,
+  submitReview,
+  ReviewValidationError,
+  ReviewRateLimitError,
+  ReviewProductNotFoundError,
+} from "@/modules/reviews";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -11,35 +16,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "productId required" }, { status: 400 });
   }
 
-  const reviews = await prisma.review.findMany({
-    where: { productId },
-    include: { user: { select: { name: true } } },
-    orderBy: { createdAt: "desc" },
-  });
+  const reviews = await getProductReviews(productId);
 
-  return NextResponse.json({
-    reviews: reviews.map((r) => ({
-      id: r.id,
-      rating: r.rating,
-      comment: r.comment,
-      createdAt: r.createdAt,
-      author: r.user.name,
-    })),
-  });
+  return NextResponse.json({ reviews });
 }
 
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Giriş yapmalısınız." }, { status: 401 });
-  }
-
-  const limited = await rateLimit(`review:${session.user.id}`, 10, 3600);
-  if (!limited.ok) {
-    return NextResponse.json(
-      { error: "Çok fazla yorum denemesi. Lütfen bekleyin." },
-      { status: 429 }
-    );
   }
 
   let body: { productId?: string; rating?: number; comment?: string };
@@ -49,51 +34,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Geçersiz istek." }, { status: 400 });
   }
 
-  const productId = body.productId;
-  const rating = Number(body.rating);
-  const comment = typeof body.comment === "string" ? body.comment.trim() : "";
-
-  if (!productId) {
-    return NextResponse.json({ error: "Ürün gereklidir." }, { status: 400 });
+  try {
+    const review = await submitReview({
+      userId: session.user.id,
+      productId: body.productId,
+      rating: body.rating,
+      comment: body.comment,
+    });
+    return NextResponse.json({ review }, { status: 201 });
+  } catch (err) {
+    if (err instanceof ReviewRateLimitError) {
+      return NextResponse.json({ error: err.message }, { status: 429 });
+    }
+    if (err instanceof ReviewProductNotFoundError) {
+      return NextResponse.json({ error: err.message }, { status: 404 });
+    }
+    if (err instanceof ReviewValidationError) {
+      return NextResponse.json({ error: err.message }, { status: 400 });
+    }
+    throw err;
   }
-  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    return NextResponse.json(
-      { error: "Puan 1 ile 5 arasında olmalı." },
-      { status: 400 }
-    );
-  }
-  if (comment.length > 1000) {
-    return NextResponse.json(
-      { error: "Yorum en fazla 1000 karakter olabilir." },
-      { status: 400 }
-    );
-  }
-
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-    select: { id: true },
-  });
-  if (!product) {
-    return NextResponse.json({ error: "Ürün bulunamadı." }, { status: 404 });
-  }
-
-  const review = await prisma.review.upsert({
-    where: { productId_userId: { productId, userId: session.user.id } },
-    update: { rating, comment: comment || null },
-    create: { productId, userId: session.user.id, rating, comment: comment || null },
-    include: { user: { select: { name: true } } },
-  });
-
-  return NextResponse.json(
-    {
-      review: {
-        id: review.id,
-        rating: review.rating,
-        comment: review.comment,
-        createdAt: review.createdAt,
-        author: review.user.name,
-      },
-    },
-    { status: 201 }
-  );
 }
