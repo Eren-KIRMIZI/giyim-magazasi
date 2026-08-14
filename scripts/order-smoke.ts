@@ -43,7 +43,7 @@ async function main() {
       description: "test",
       subtitle: "TEST",
       price: 100,
-      stock: 10,
+      stock: 3,
       status: "ACTIVE",
       categoryId: category.id,
     },
@@ -85,7 +85,7 @@ async function main() {
   let v = await prisma.productVariant.findUnique({ where: { id: variant.id } });
   assert(v?.stock === 1, `variant stock 3→1 (got ${v?.stock})`);
   let p = await prisma.product.findUnique({ where: { id: product.id } });
-  assert(p?.stock === 8, `product stock 10→8 (got ${p?.stock})`);
+  assert(p?.stock === 1, `product stock derived from variants 3→1 (got ${p?.stock})`);
 
   console.log("reserveStock insufficient → rollback");
   let failed = false;
@@ -216,7 +216,7 @@ async function main() {
   v = await prisma.productVariant.findUnique({ where: { id: variant.id } });
   assert(v?.stock === 3, `cancel restores variant stock to 3 (got ${v?.stock})`);
   p = await prisma.product.findUnique({ where: { id: product.id } });
-  assert(p?.stock === 10, `cancel restores product stock to 10 (got ${p?.stock})`);
+  assert(p?.stock === 3, `cancel restores product stock to 3 (got ${p?.stock})`);
 
   console.log("applyOrderStatusChange (blocked: re-activate after restore)");
   const freshCanceled = (await prisma.order.findUnique({

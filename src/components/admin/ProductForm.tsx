@@ -60,7 +60,6 @@ export default function ProductForm({
   const [compareAtPrice, setCompareAtPrice] = useState(
     initial?.compareAtPrice != null ? String(initial.compareAtPrice) : ""
   );
-  const [stock, setStock] = useState(initial ? String(initial.stock) : "25");
   const [status, setStatus] = useState(initial?.status ?? "ACTIVE");
   const [badge, setBadge] = useState(initial?.badge ?? "");
   const [categoryId, setCategoryId] = useState(
@@ -123,7 +122,6 @@ export default function ProductForm({
       description,
       price: Number(price),
       compareAtPrice: compareAtPrice !== "" ? Number(compareAtPrice) : null,
-      stock: Number(stock),
       status,
       badge: badge || null,
       categoryId,
@@ -236,17 +234,6 @@ export default function ProductForm({
             min="0"
             value={compareAtPrice}
             onChange={(e) => setCompareAtPrice(e.target.value)}
-            className={INPUT_CLASS}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label htmlFor="stock" className={LABEL_CLASS}>Stok</label>
-          <input
-            id="stock"
-            type="number"
-            min="0"
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
             className={INPUT_CLASS}
           />
         </div>

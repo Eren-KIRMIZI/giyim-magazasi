@@ -32,6 +32,17 @@ export class StockInsufficientError extends Error {
 
 type Tx = Prisma.TransactionClient;
 
+async function syncProductStock(tx: Tx, productId: string) {
+  const agg = await tx.productVariant.aggregate({
+    where: { productId },
+    _sum: { stock: true },
+  });
+  await tx.product.update({
+    where: { id: productId },
+    data: { stock: agg._sum.stock ?? 0 },
+  });
+}
+
 export async function resolveVariant(
   tx: Tx,
   productId: string,
@@ -63,6 +74,7 @@ export async function reserveStock(
   productPrices: Map<string, number>
 ): Promise<StockLineResolved[]> {
   const resolved: StockLineResolved[] = [];
+  const touchedProducts = new Set<string>();
 
   for (const line of lines) {
     const variant = await resolveVariant(
@@ -87,15 +99,7 @@ export async function reserveStock(
       );
     }
 
-    const productUpdated = await tx.product.updateMany({
-      where: { id: line.productId, stock: { gte: line.quantity } },
-      data: { stock: { decrement: line.quantity } },
-    });
-    if (productUpdated.count !== 1) {
-      throw new StockInsufficientError(
-        `Yetersiz stok: ${productNames.get(line.productId) ?? "Ürün"}`
-      );
-    }
+    touchedProducts.add(line.productId);
 
     resolved.push({
       ...line,
@@ -109,6 +113,10 @@ export async function reserveStock(
     });
   }
 
+  for (const productId of touchedProducts) {
+    await syncProductStock(tx, productId);
+  }
+
   return resolved;
 }
 
@@ -119,15 +127,19 @@ export interface StockReleaseLine {
 }
 
 export async function releaseStock(tx: Tx, lines: StockReleaseLine[]) {
+  const touchedProducts = new Set<string>();
+
   for (const line of lines) {
+    if (!line.variantId || !line.productId) continue;
     await tx.productVariant.updateMany({
       where: { id: line.variantId },
       data: { stock: { increment: line.quantity } },
     });
-    await tx.product.updateMany({
-      where: { id: line.productId },
-      data: { stock: { increment: line.quantity } },
-    });
+    touchedProducts.add(line.productId);
+  }
+
+  for (const productId of touchedProducts) {
+    await syncProductStock(tx, productId);
   }
 }
 

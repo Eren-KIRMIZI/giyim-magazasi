@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import Reveal from "@/components/ui/Reveal";
+import NewsletterForm from "@/components/ui/NewsletterForm";
 import { collections } from "@/lib/data";
 
 export default function CollectionsSection() {
@@ -63,21 +64,7 @@ export default function CollectionsSection() {
               <p className="font-label-mono text-label-mono text-surface-variant mb-6">
                 Exclusive access to limited drops before they hit the main grid.
               </p>
-              <form className="flex w-full border-b border-surface pb-2 group focus-within:border-primary transition-colors">
-                <input
-                  className="bg-transparent w-full font-label-mono text-label-mono text-surface placeholder:text-surface-variant focus:outline-none focus:ring-0 border-none p-0 transition-all duration-300"
-                  placeholder="EMAIL ADDRESS"
-                  type="email"
-                />
-                <button
-                  className="text-surface group-focus-within:text-primary transition-colors hover:translate-x-1 transform duration-300"
-                  type="button"
-                >
-                  <span className="material-symbols-outlined text-lg">
-                    arrow_forward
-                  </span>
-                </button>
-              </form>
+              <NewsletterForm tone="on-dark" />
             </div>
           </Reveal>
         </div>

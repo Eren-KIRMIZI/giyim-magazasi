@@ -213,3 +213,9 @@ model Review {
   @@unique([productId, userId])
   @@index([productId])
 }
+
+model NewsletterSubscription {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}

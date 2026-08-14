@@ -32,7 +32,7 @@ async function main() {
         description: p.description,
         subtitle: p.subtitle,
         price: p.price,
-        stock: 25,
+        stock: 0,
         status: p.badge === "SOLD OUT" ? "SOLD_OUT" : "ACTIVE",
         badge: p.badge ?? null,
         category: { connect: { slug: p.category } },
@@ -70,6 +70,15 @@ async function main() {
           };
         });
       }),
+    });
+
+    const totalVariantStock = await prisma.productVariant.aggregate({
+      where: { productId: product.id },
+      _sum: { stock: true },
+    });
+    await prisma.product.update({
+      where: { id: product.id },
+      data: { stock: totalVariantStock._sum.stock ?? 0 },
     });
   }
 

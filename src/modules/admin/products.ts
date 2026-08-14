@@ -217,10 +217,14 @@ export async function createProduct(body: Record<string, unknown>) {
   const variants = parseVariantLines(
     Array.isArray(body.variants) ? body.variants.map(String) : []
   );
+  const base = productDataFromBody(body, slug);
 
   return prisma.product.create({
     data: {
-      ...productDataFromBody(body, slug),
+      ...base,
+      stock: variants.length
+        ? variants.reduce((n, v) => n + v.stock, 0)
+        : base.stock,
       categoryId: category.id,
       images: {
         create: images.map((img, i) => ({
@@ -278,6 +282,7 @@ export async function updateProduct(id: string, body: Record<string, unknown>) {
   const variants = parseVariantLines(
     Array.isArray(body.variants) ? body.variants.map(String) : []
   );
+  const base = productDataFromBody(body, slug);
 
   return prisma.$transaction(async (tx) => {
     await tx.productImage.deleteMany({ where: { productId: id } });
@@ -286,7 +291,10 @@ export async function updateProduct(id: string, body: Record<string, unknown>) {
     return tx.product.update({
       where: { id },
       data: {
-        ...productDataFromBody(body, slug),
+        ...base,
+        stock: variants.length
+          ? variants.reduce((n, v) => n + v.stock, 0)
+          : base.stock,
         status: ["ACTIVE", "DRAFT", "SOLD_OUT"].includes(String(body.status))
           ? String(body.status)
           : product.status,
