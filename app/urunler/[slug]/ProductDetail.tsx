@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useCartStore } from "@/store/cart";
+import { useRecentlyViewedStore } from "@/store/recentlyViewed";
 import { formatPrice, type Product } from "@/lib/data";
 import { flyToCart } from "@/lib/flyToCart";
 import ProductCard from "@/components/store/ProductCard";
+import WishlistButton from "@/components/store/WishlistButton";
 import ReviewsSection from "@/components/reviews/ReviewsSection";
 
 interface ProductDetailProps {
@@ -29,6 +31,20 @@ export default function ProductDetail({
   );
   const [added, setAdded] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
+  const addRecentlyViewed = useRecentlyViewedStore((s) => s.add);
+
+  useEffect(() => {
+    addRecentlyViewed({
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      subtitle: product.subtitle,
+      price: product.price,
+      image: product.images[0].src,
+      imageAlt: product.images[0].alt,
+      badge: product.badge,
+    });
+  }, [product, addRecentlyViewed]);
 
   const soldOut = product.badge === "SOLD OUT";
 
@@ -76,7 +92,7 @@ export default function ProductDetail({
   };
 
   return (
-    <div className="animate-fade-in-up">
+    <div className="animate-fade-in-up pb-20 md:pb-0">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-gutter mb-stack-lg border border-on-surface">
         <div className="md:col-span-7 border-b md:border-b-0 md:border-r border-on-surface flex flex-col">
           <div className="w-full relative bg-surface-container aspect-square overflow-hidden">
@@ -211,29 +227,44 @@ export default function ProductDetail({
           </div>
 
           <div className="flex flex-col gap-stack-sm">
-            <button
-              type="button"
-              onClick={handleAddToBag}
-              disabled={soldOut || !activeSize || selectedStock === 0}
-              className={`${
-                added
-                  ? "bg-primary text-on-primary"
-                  : "bg-on-surface text-surface hover:bg-primary hover:text-on-primary"
-              } w-full font-headline-md text-headline-md uppercase py-4 transition-colors flex items-center justify-center gap-2 ${
-                added ? "animate-pop" : ""
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              <span>
-                {added
-                  ? "Added"
-                  : soldOut || selectedStock === 0
-                    ? "Sold Out"
-                    : "Add to Bag"}
-              </span>
-              <span className="material-symbols-outlined icon-fill text-[24px]">
-                {added ? "check" : "shopping_bag"}
-              </span>
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleAddToBag}
+                disabled={soldOut || !activeSize || selectedStock === 0}
+                className={`${
+                  added
+                    ? "bg-primary text-on-primary"
+                    : "bg-on-surface text-surface hover:bg-primary hover:text-on-primary"
+                } flex-1 font-headline-md text-headline-md uppercase py-4 transition-colors flex items-center justify-center gap-2 ${
+                  added ? "animate-pop" : ""
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <span>
+                  {added
+                    ? "Added"
+                    : soldOut || selectedStock === 0
+                      ? "Sold Out"
+                      : "Add to Bag"}
+                </span>
+                <span className="material-symbols-outlined icon-fill text-[24px]">
+                  {added ? "check" : "shopping_bag"}
+                </span>
+              </button>
+              <WishlistButton
+                item={{
+                  id: product.id,
+                  slug: product.slug,
+                  name: product.name,
+                  subtitle: product.subtitle,
+                  price: product.price,
+                  image: product.images[0].src,
+                  imageAlt: product.images[0].alt,
+                  badge: product.badge,
+                }}
+                className="w-14 border border-on-surface text-on-surface hover:text-primary bg-transparent"
+              />
+            </div>
             <button
               type="button"
               className="w-full border border-on-surface bg-transparent text-on-surface font-headline-md text-headline-md uppercase py-4 hover:bg-surface-variant transition-colors flex items-center justify-center gap-2"
@@ -261,6 +292,54 @@ export default function ProductDetail({
           ))}
         </div>
       </section>
+
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-surface border-t border-on-surface px-margin-mobile py-stack-sm flex items-center gap-2">
+        <div className="flex flex-col flex-shrink-0">
+          <span className="font-label-mono text-label-mono uppercase text-on-surface-variant text-xs">
+            {activeSize ?? "Size?"}
+            {activeColor && product.colors && product.colors.length > 1
+              ? ` · ${activeColor}`
+              : ""}
+          </span>
+          <span className="font-headline-md text-headline-md uppercase">
+            {formatPrice(product.price)}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={handleAddToBag}
+          disabled={soldOut || !activeSize || selectedStock === 0}
+          className={`flex-1 py-3 font-headline-md text-headline-md uppercase transition-colors flex items-center justify-center gap-2 ${
+            added
+              ? "bg-primary text-on-primary"
+              : "bg-on-surface text-surface hover:bg-primary hover:text-on-primary"
+          } disabled:opacity-50 disabled:cursor-not-allowed`}
+        >
+          <span>
+            {added
+              ? "Added"
+              : soldOut || selectedStock === 0
+                ? "Sold Out"
+                : "Add to Bag"}
+          </span>
+          <span className="material-symbols-outlined icon-fill text-[24px]">
+            {added ? "check" : "shopping_bag"}
+          </span>
+        </button>
+        <WishlistButton
+          item={{
+            id: product.id,
+            slug: product.slug,
+            name: product.name,
+            subtitle: product.subtitle,
+            price: product.price,
+            image: product.images[0].src,
+            imageAlt: product.images[0].alt,
+            badge: product.badge,
+          }}
+          className="w-12 h-12 border border-on-surface text-on-surface hover:text-primary bg-surface"
+        />
+      </div>
     </div>
   );
 }

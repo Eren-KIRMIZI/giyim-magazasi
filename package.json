@@ -15,6 +15,7 @@
     "@auth/prisma-adapter": "^2.11.3",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
+    "@vercel/analytics": "^2.0.1",
     "bcryptjs": "^3.0.3",
     "gsap": "^3.15.0",
     "ioredis": "^6.0.0",

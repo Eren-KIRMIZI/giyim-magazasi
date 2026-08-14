@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@/lib/data";
 import { formatPrice } from "@/lib/data";
+import WishlistButton from "@/components/store/WishlistButton";
 
 interface ProductCardProps {
   product: Product;
@@ -51,6 +52,21 @@ export default function ProductCard({
             </span>
           </div>
         )}
+        <div className="absolute top-2 right-2 bg-surface/80 backdrop-blur-sm border border-on-surface/20">
+          <WishlistButton
+            item={{
+              id: product.id,
+              slug: product.slug,
+              name: product.name,
+              subtitle: product.subtitle,
+              price: product.price,
+              image: product.images[0].src,
+              imageAlt: product.images[0].alt,
+              badge: product.badge,
+            }}
+            className="w-9 h-9 text-on-surface hover:text-primary"
+          />
+        </div>
       </div>
       <div className="p-4 flex flex-col gap-2 relative">
         <h3 className="font-label-mono text-label-mono uppercase text-on-surface tracking-widest">

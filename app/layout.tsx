@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Anton, Geist, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -24,6 +26,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "LAST DANCE | Official Store",
     template: "%s | LAST DANCE",
@@ -71,6 +74,7 @@ export default function RootLayout({
             <main className="flex-grow">{children}</main>
             <Footer />
             <CartSync />
+            <Analytics />
           </ScrollProvider>
         </AuthProvider>
       </body>

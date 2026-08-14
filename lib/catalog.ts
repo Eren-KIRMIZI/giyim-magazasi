@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import type { Product } from "@/lib/data";
 
 const COLOR_HEX: Record<string, string> = {
@@ -112,15 +113,149 @@ export async function getRecommendedProducts(
   excludeSlug: string,
   limit = 3
 ): Promise<Product[]> {
-  const rows = await prisma.product.findMany({
-    where: { status: { not: "DRAFT" }, slug: { not: excludeSlug } },
-    include: {
-      category: true,
-      images: { orderBy: { position: "asc" } },
-      variants: true,
-    },
-    orderBy: { createdAt: "desc" },
-    take: limit,
+  const current = await prisma.product.findUnique({
+    where: { slug: excludeSlug },
+    select: { categoryId: true },
   });
+
+  const include = {
+    category: true,
+    images: { orderBy: { position: "asc" } },
+    variants: true,
+  } as const;
+
+  const rows: DbProduct[] = [];
+  if (current) {
+    rows.push(
+      ...(await prisma.product.findMany({
+        where: {
+          status: { not: "DRAFT" },
+          categoryId: current.categoryId,
+          slug: { not: excludeSlug },
+        },
+        include,
+        orderBy: { createdAt: "desc" },
+        take: limit,
+      }))
+    );
+  }
+  if (rows.length < limit) {
+    rows.push(
+      ...(await prisma.product.findMany({
+        where: {
+          status: { not: "DRAFT" },
+          slug: { not: excludeSlug },
+          id: { notIn: rows.map((r) => r.id) },
+        },
+        include,
+        orderBy: { createdAt: "desc" },
+        take: limit - rows.length,
+      }))
+    );
+  }
   return rows.map(mapProduct);
+}
+
+export type SearchSort = "newest" | "price_asc" | "price_desc" | "popular";
+
+export interface SearchFilters {
+  q?: string;
+  categories?: string[];
+  sizes?: string[];
+  colors?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  inStockOnly?: boolean;
+  sort?: SearchSort;
+}
+
+const PRODUCT_INCLUDE = {
+  category: true,
+  images: { orderBy: { position: "asc" } },
+  variants: true,
+} as const;
+
+export async function searchProducts(
+  filters: SearchFilters
+): Promise<Product[]> {
+  const where: Prisma.ProductWhereInput = { status: { not: "DRAFT" } };
+
+  const terms = filters.q?.trim().split(/\s+/).filter(Boolean) ?? [];
+  if (terms.length) {
+    where.OR = terms.map((term) => ({
+      OR: [
+        { name: { contains: term, mode: "insensitive" } },
+        { subtitle: { contains: term, mode: "insensitive" } },
+        { description: { contains: term, mode: "insensitive" } },
+      ],
+    }));
+  }
+
+  if (filters.categories?.length) {
+    where.category = { slug: { in: filters.categories } };
+  }
+
+  const variantWhere: Prisma.ProductVariantWhereInput = {};
+  if (filters.sizes?.length) variantWhere.size = { in: filters.sizes };
+  if (filters.colors?.length) variantWhere.color = { in: filters.colors };
+
+  const variantConditions: Prisma.ProductVariantWhereInput[] = [];
+  if (Object.keys(variantWhere).length) {
+    variantConditions.push(variantWhere);
+  }
+  if (filters.inStockOnly) {
+    variantConditions.push({ stock: { gt: 0 } });
+  }
+  if (variantConditions.length) {
+    where.variants = {
+      some:
+        variantConditions.length === 1
+          ? variantConditions[0]
+          : { AND: variantConditions },
+    };
+  }
+
+  if (filters.minPrice != null || filters.maxPrice != null) {
+    where.price = {
+      ...(filters.minPrice != null ? { gte: filters.minPrice } : {}),
+      ...(filters.maxPrice != null ? { lte: filters.maxPrice } : {}),
+    };
+  }
+
+  const orderBy: Prisma.ProductOrderByWithRelationInput =
+    filters.sort === "price_asc"
+      ? { price: "asc" }
+      : filters.sort === "price_desc"
+        ? { price: "desc" }
+        : { createdAt: "desc" };
+
+  const rows = await prisma.product.findMany({
+    where,
+    include: PRODUCT_INCLUDE,
+    orderBy,
+    take: 200,
+  });
+
+  if (filters.sort === "popular") {
+    const counts = await prisma.orderItem.groupBy({
+      by: ["productId"],
+      where: { productId: { not: null } },
+      _sum: { quantity: true },
+    });
+    const sold = new Map(
+      counts.map((c) => [c.productId, c._sum.quantity ?? 0])
+    );
+    rows.sort((a, b) => (sold.get(b.id) ?? 0) - (sold.get(a.id) ?? 0));
+  }
+
+  return rows.map(mapProduct);
+}
+
+export async function getAllCategories(): Promise<
+  { value: string; label: string }[]
+> {
+  const rows = await prisma.category.findMany({
+    orderBy: { name: "asc" },
+  });
+  return rows.map((c) => ({ value: c.slug, label: c.name }));
 }

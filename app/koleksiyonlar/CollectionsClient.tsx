@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import ProductCard from "@/components/store/ProductCard";
+import RecentlyViewedSection from "@/components/store/RecentlyViewedSection";
 import type { Product } from "@/lib/data";
 
 const SIZES = ["S", "M", "L", "XL"];
@@ -126,8 +127,9 @@ export default function CollectionsClient({ products }: { products: Product[] })
   );
 
   return (
-    <main className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col md:flex-row gap-gutter">
-      <div className="hidden md:block w-64 flex-shrink-0">{filterPanel}</div>
+    <main className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+      <div className="flex flex-col md:flex-row gap-gutter">
+        <div className="hidden md:block w-64 flex-shrink-0">{filterPanel}</div>
 
       <section className="flex-1 w-full">
         <div className="md:hidden mb-stack-md flex justify-between items-center border-b border-on-surface pb-stack-sm">
@@ -185,6 +187,8 @@ export default function CollectionsClient({ products }: { products: Product[] })
           </div>
         )}
       </section>
+      </div>
+      <RecentlyViewedSection />
     </main>
   );
 }

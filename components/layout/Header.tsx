@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/store/cart";
+import { useWishlistStore } from "@/store/wishlist";
 import { brandLogo } from "@/lib/data";
 
 const NAV_LINKS = [
@@ -19,6 +20,7 @@ export default function Header() {
   const itemCount = useCartStore((s) =>
     s.items.reduce((n, item) => n + item.quantity, 0)
   );
+  const wishlistCount = useWishlistStore((s) => s.items.length);
   const { data: session, status } = useSession();
   const userName =
     session?.user?.name?.split(" ")[0] ?? session?.user?.email?.split("@")[0] ?? "";
@@ -57,12 +59,13 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-stack-sm text-primary dark:text-primary-fixed-dim">
-          <button
+          <Link
+            href="/search"
             aria-label="Search"
             className="hover:text-primary dark:hover:text-primary-fixed-dim transition-all duration-150 p-2"
           >
             <span className="material-symbols-outlined">search</span>
-          </button>
+          </Link>
           {status === "authenticated" ? (
             <div className="hidden md:flex items-center gap-stack-sm">
               {session?.user?.role === "ADMIN" && (
@@ -99,6 +102,18 @@ export default function Header() {
             </Link>
           )}
           <Link
+            href="/begendiklerim"
+            aria-label="Wishlist"
+            className="relative hover:text-primary dark:hover:text-primary-fixed-dim transition-all duration-150 p-2 hidden md:block"
+          >
+            <span className="material-symbols-outlined">favorite</span>
+            {wishlistCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-primary text-on-primary font-label-mono text-label-mono px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                {wishlistCount}
+              </span>
+            )}
+          </Link>
+          <Link
             href="/sepet"
             aria-label="Shopping Bag"
             id="cart-icon"
@@ -134,6 +149,25 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+            <div className="flex items-center gap-stack-md mt-stack-sm">
+              <Link
+                href="/search"
+                onClick={() => setMenuOpen(false)}
+                className="font-headline-md text-headline-md uppercase text-on-surface hover:text-primary transition-colors flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-[22px]">search</span>
+                Search
+              </Link>
+              <Link
+                href="/begendiklerim"
+                onClick={() => setMenuOpen(false)}
+                className="font-headline-md text-headline-md uppercase text-on-surface hover:text-primary transition-colors flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-[22px]">favorite</span>
+                Wishlist
+                {wishlistCount > 0 && ` (${wishlistCount})`}
+              </Link>
+            </div>
           </div>
         </div>
       )}

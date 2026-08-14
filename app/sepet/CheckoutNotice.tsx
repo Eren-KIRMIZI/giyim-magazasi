@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { track } from "@vercel/analytics";
 import { useCartStore } from "@/store/cart";
 
 export default function CheckoutNotice() {
@@ -14,6 +15,7 @@ export default function CheckoutNotice() {
   useEffect(() => {
     if (success === "1") {
       clearCart();
+      track("order_completed");
     }
   }, [success, clearCart]);
 
