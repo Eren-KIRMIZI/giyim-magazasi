@@ -8,6 +8,12 @@ export interface ColorVariant {
   hex: string;
 }
 
+export interface VariantStock {
+  size: string;
+  color: string | null;
+  stock: number;
+}
+
 export interface Product {
   id: string;
   slug: string;
@@ -22,6 +28,7 @@ export interface Product {
   sizes: string[];
   soldOutSizes?: string[];
   images: ProductImage[];
+  variantStock?: VariantStock[];
 }
 
 export interface Collection {

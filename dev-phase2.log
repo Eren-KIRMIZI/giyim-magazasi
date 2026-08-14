@@ -73,3 +73,4 @@ prisma:query SELECT "public"."User"."id", "public"."User"."email", "public"."Use
  POST /api/auth/callback/credentials 302 in 545ms (next.js: 13ms, application-code: 532ms)
  GET /api/admin/users 401 in 27ms (next.js: 8ms, application-code: 20ms)
 ✓ Finished writing to filesystem cache in 11.0s
+[?25h

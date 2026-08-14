@@ -12,15 +12,23 @@ export interface CartItem {
   size: string;
   color?: string;
   quantity: number;
+  maxQuantity?: number;
 }
 
 export function cartItemKey(item: Pick<CartItem, "productId" | "size" | "color">) {
   return `${item.productId}::${item.size}::${item.color ?? ""}`;
 }
 
+function clampQty(quantity: number, maxQuantity?: number) {
+  if (maxQuantity != null && maxQuantity > 0) {
+    return Math.min(quantity, maxQuantity);
+  }
+  return quantity;
+}
+
 interface CartState {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, "quantity">) => void;
+  addItem: (item: Omit<CartItem, "quantity"> & { maxQuantity?: number }) => void;
   removeItem: (productId: string, size: string, color?: string) => void;
   updateQuantity: (
     productId: string,
@@ -41,15 +49,28 @@ export const useCartStore = create<CartState>()(
           (i) => cartItemKey(i) === cartItemKey(item)
         );
         if (existing) {
+          const maxQuantity = Math.max(
+            existing.maxQuantity ?? 0,
+            item.maxQuantity ?? 0
+          );
           set({
             items: get().items.map((i) =>
               cartItemKey(i) === cartItemKey(item)
-                ? { ...i, quantity: i.quantity + 1 }
+                ? {
+                    ...i,
+                    quantity: clampQty(i.quantity + 1, maxQuantity),
+                    maxQuantity: maxQuantity || undefined,
+                  }
                 : i
             ),
           });
         } else {
-          set({ items: [...get().items, { ...item, quantity: 1 }] });
+          set({
+            items: [
+              ...get().items,
+              { ...item, quantity: 1, maxQuantity: item.maxQuantity },
+            ],
+          });
         }
       },
       removeItem: (productId, size, color) => {
@@ -70,7 +91,9 @@ export const useCartStore = create<CartState>()(
         }
         set({
           items: get().items.map((i) =>
-            cartItemKey(i) === key ? { ...i, quantity } : i
+            cartItemKey(i) === key
+              ? { ...i, quantity: clampQty(quantity, i.maxQuantity) }
+              : i
           ),
         });
       },

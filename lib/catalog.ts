@@ -59,6 +59,11 @@ function mapProduct(p: DbProduct): Product {
       .filter((v) => v.stock === 0)
       .map((v) => v.size),
     images: p.images.map((img) => ({ src: img.url, alt: img.alt ?? "" })),
+    variantStock: p.variants.map((v) => ({
+      size: v.size,
+      color: v.color,
+      stock: v.stock,
+    })),
   };
 }
 

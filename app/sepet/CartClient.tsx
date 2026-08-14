@@ -156,13 +156,24 @@ export default function CartClient() {
                           item.color
                         )
                       }
-                      className="w-9 h-9 flex items-center justify-center font-label-mono text-label-mono hover:bg-on-surface hover:text-surface transition-colors"
+                      disabled={
+                        item.maxQuantity != null &&
+                        item.quantity >= item.maxQuantity
+                      }
+                      className="w-9 h-9 flex items-center justify-center font-label-mono text-label-mono hover:bg-on-surface hover:text-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       +
                     </button>
                   </div>
-                  <div className="font-label-mono text-label-mono uppercase">
-                    {formatPrice(item.price * item.quantity)}
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="font-label-mono text-label-mono uppercase">
+                      {formatPrice(item.price * item.quantity)}
+                    </div>
+                    {item.maxQuantity != null && (
+                      <div className="font-label-mono text-label-mono uppercase text-on-surface-variant">
+                        Stok: {item.maxQuantity}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -1,0 +1,13 @@
+
+> giyim-magazasi@0.1.0 dev
+> next dev
+
+▲ Next.js 16.3.0 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.56.1:3000
+- Environments: .env
+✓ Ready in 938ms
+✓ Running next.config.ts took 74ms
+⚠ Slow filesystem detected. The benchmark took 695ms. If \\?\C:\Users\Eren\giyim-magazasi\.next\dev is a network drive, consider moving it to a local folder.
+See more: https://nextjs.org/docs/app/guides/local-development
+

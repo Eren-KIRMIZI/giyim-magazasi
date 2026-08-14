@@ -32,6 +32,22 @@ export default function ProductDetail({
 
   const soldOut = product.badge === "SOLD OUT";
 
+  const stockFor = (size: string, color?: string | null): number | null => {
+    const variants = product.variantStock;
+    if (!variants) return null;
+    const bySize = variants.filter((v) => v.size === size);
+    const hasColors = (product.colors?.length ?? 0) > 1;
+    if (color && hasColors) {
+      return bySize.find((v) => v.color === color)?.stock ?? 0;
+    }
+    return bySize.reduce((n, v) => n + v.stock, 0);
+  };
+
+  const selectedStock = activeSize
+    ? stockFor(activeSize, activeColor)
+    : null;
+  const lowStock = selectedStock != null && selectedStock > 0 && selectedStock <= 5;
+
   const handleThumbClick = (index: number) => {
     if (index === activeImage) return;
     setImageChanging(true);
@@ -43,6 +59,7 @@ export default function ProductDetail({
 
   const handleAddToBag = () => {
     if (!activeSize || soldOut) return;
+    if (selectedStock === 0) return;
     flyToCart(document.getElementById("main-image"));
     addItem({
       productId: product.id,
@@ -52,6 +69,7 @@ export default function ProductDetail({
       image: product.images[0].src,
       size: activeSize,
       color: activeColor ?? undefined,
+      maxQuantity: selectedStock ?? undefined,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -128,7 +146,10 @@ export default function ProductDetail({
               </div>
               <div className="flex gap-2 flex-wrap">
                 {product.sizes.map((size) => {
-                  const isSoldOut = product.soldOutSizes?.includes(size);
+                  const hasColors = (product.colors?.length ?? 0) > 1;
+                  const isSoldOut = hasColors
+                    ? (stockFor(size, activeColor) ?? 0) === 0
+                    : product.soldOutSizes?.includes(size);
                   return (
                     <button
                       key={size}
@@ -148,6 +169,11 @@ export default function ProductDetail({
                   );
                 })}
               </div>
+              {lowStock && (
+                <p className="mt-3 font-label-mono text-label-mono uppercase text-error">
+                  Son {selectedStock} adet
+                </p>
+              )}
             </div>
 
             {product.colors && product.colors.length > 1 && (
@@ -188,7 +214,7 @@ export default function ProductDetail({
             <button
               type="button"
               onClick={handleAddToBag}
-              disabled={soldOut || !activeSize}
+              disabled={soldOut || !activeSize || selectedStock === 0}
               className={`${
                 added
                   ? "bg-primary text-on-primary"
@@ -197,7 +223,13 @@ export default function ProductDetail({
                 added ? "animate-pop" : ""
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              <span>{added ? "Added" : soldOut ? "Sold Out" : "Add to Bag"}</span>
+              <span>
+                {added
+                  ? "Added"
+                  : soldOut || selectedStock === 0
+                    ? "Sold Out"
+                    : "Add to Bag"}
+              </span>
               <span className="material-symbols-outlined icon-fill text-[24px]">
                 {added ? "check" : "shopping_bag"}
               </span>
