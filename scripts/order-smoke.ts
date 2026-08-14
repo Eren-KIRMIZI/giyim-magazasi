@@ -1,16 +1,18 @@
 import "dotenv/config";
 import { Prisma } from "@prisma/client";
-import { prisma } from "../lib/prisma";
+import { prisma } from "../src/infrastructure/prisma";
 import {
   reserveStock,
-  createOrderFromReservation,
   releaseReservation,
-  applyOrderStatusChange,
   StockInsufficientError,
   RESERVATION_STATUS,
-  generateOrderNumber,
   type ReservationLine,
-} from "../lib/order";
+} from "../src/modules/checkout";
+import {
+  createOrderFromReservation,
+  applyOrderStatusChange,
+  generateOrderNumber,
+} from "../src/modules/orders";
 
 let failures = 0;
 

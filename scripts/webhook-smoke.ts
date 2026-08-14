@@ -1,9 +1,13 @@
 import "dotenv/config";
 import Stripe from "stripe";
 import { Prisma } from "@prisma/client";
-import { prisma } from "../lib/prisma";
-import { RESERVATION_STATUS, reserveStock, type ReservationLine } from "../lib/order";
-import { POST } from "../app/api/webhooks/stripe/route";
+import { prisma } from "../src/infrastructure/prisma";
+import {
+  RESERVATION_STATUS,
+  reserveStock,
+  type ReservationLine,
+} from "../src/modules/checkout";
+import { POST } from "../src/app/api/webhooks/stripe/route";
 
 process.env.STRIPE_SECRET_KEY = "sk_test_webhook_valid";
 process.env.STRIPE_WEBHOOK_SECRET = "whsec_testsecret123";
