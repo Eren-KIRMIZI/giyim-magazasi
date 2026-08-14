@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 export interface AdminCategory {
@@ -81,6 +81,34 @@ export default function ProductForm({
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setError("");
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Yüklenemedi.");
+      const url = data.url as string;
+      setImagesText((prev) =>
+        prev.trim() ? `${prev.trim()}\n${url}` : url
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Yükleme başarısız.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -265,6 +293,26 @@ export default function ProductForm({
           onChange={(e) => setImagesText(e.target.value)}
           className={`${INPUT_CLASS} font-mono`}
         />
+        <div className="flex items-center gap-gutter">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="bg-on-surface text-surface font-label-mono text-label-mono uppercase px-4 py-2 hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-60"
+          >
+            {uploading ? "Yükleniyor..." : "Görsel Yükle"}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          <span className="font-body-sm text-body-sm text-on-surface-variant">
+            jpeg/png/webp/gif/avif, en fazla 5MB
+          </span>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">
