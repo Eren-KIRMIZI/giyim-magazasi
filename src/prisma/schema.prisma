@@ -172,14 +172,16 @@ model OrderItem {
 }
 
 model OrderReservation {
-  id              String   @id @default(cuid())
-  stripeSessionId String   @unique
+  id              String    @id @default(cuid())
+  stripeSessionId String    @unique
   userId          String
-  status          String   @default("ACTIVE") // ACTIVE | CONSUMED | RELEASED
+  status          String    @default("ACTIVE") // ACTIVE | CONSUMED | RELEASED
   items           Json
-  createdAt       DateTime @default(now())
+  expiresAt       DateTime? // stok rezervasyonu bu tarihte zorunlu iade edilir (cron / lazy)
+  createdAt       DateTime  @default(now())
 
   @@index([userId])
+  @@index([status, expiresAt])
 }
 
 model Cart {

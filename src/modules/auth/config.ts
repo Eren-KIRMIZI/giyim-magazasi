@@ -54,10 +54,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) token.role = (user as { role?: string }).role ?? "CUSTOMER";
       return token;
     },
-    session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.sub as string;
-        session.user.role = (token.role as string) ?? "CUSTOMER";
+    async session({ session, token }) {
+      if (session.user && token.sub) {
+        session.user.id = token.sub;
+        // Rolü JWT'ye güvenmek yerine her istekte DB'den taze oku:
+        // admin panelden düşürülen kullanıcı, oturum yenilenmeden yetkisini kaybeder.
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.sub },
+          select: { role: true, name: true, email: true },
+        });
+        session.user.role = dbUser?.role ?? (token.role as string) ?? "CUSTOMER";
+        if (dbUser?.name) session.user.name = dbUser.name;
+        if (dbUser?.email) session.user.email = dbUser.email;
       }
       return session;
     },

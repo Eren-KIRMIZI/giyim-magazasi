@@ -1,9 +1,12 @@
 export {
   RESERVATION_STATUS,
+  RESERVATION_TTL_MS,
+  reservationExpiresAt,
   resolveVariant,
   reserveStock,
   releaseStock,
   releaseReservation,
+  releaseExpiredReservations,
   StockInsufficientError,
   type StockLine,
   type StockLineResolved,

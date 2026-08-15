@@ -7,6 +7,12 @@ export const RESERVATION_STATUS = {
   RELEASED: "RELEASED",
 } as const;
 
+export const RESERVATION_TTL_MS = 24 * 60 * 60 * 1000; // 24 saat
+
+export function reservationExpiresAt(now = new Date()): Date {
+  return new Date(now.getTime() + RESERVATION_TTL_MS);
+}
+
 export interface StockLine {
   productId: string;
   size: string;
@@ -187,4 +193,28 @@ export async function releaseReservation(stripeSessionId: string) {
       );
     }
   });
+}
+
+export async function releaseExpiredReservations(
+  now = new Date()
+): Promise<number> {
+  const expired = await prisma.orderReservation.findMany({
+    where: {
+      status: RESERVATION_STATUS.ACTIVE,
+      OR: [
+        { expiresAt: { lt: now } },
+        // TTL öncesi kayıtlar için geriye dönük fallback (migration backfill'iyle birebir)
+        {
+          expiresAt: null,
+          createdAt: { lt: new Date(now.getTime() - RESERVATION_TTL_MS) },
+        },
+      ],
+    },
+    select: { stripeSessionId: true },
+  });
+
+  for (const reservation of expired) {
+    await releaseReservation(reservation.stripeSessionId);
+  }
+  return expired.length;
 }

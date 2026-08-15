@@ -19,14 +19,15 @@ Brutalist tasarımlı, tam yığın (full-stack) e-ticaret mağazası. Next.js 1
 - **İkonlar:** `components/icons.tsx` — tüm ikonlar **inline SVG** (Material Symbols bağımlılığı yok).
 
 ### Kimlik, hesap ve sipariş
-- **Kimlik doğrulama:** kayıt + giriş (`/giris`), `bcryptjs` hash, rol (ADMIN/CUSTOMER) JWT session'da; Redis tabanlı rate limit (kayıt 10/15dk, yorum 10/saat, Redis yokken fail-open).
+- **Kimlik doğrulama:** kayıt + giriş (`/giris`), `bcryptjs` hash, rol (ADMIN/CUSTOMER) JWT session'da; `session` callback'i rolü **her istekte DB'den taze okur** (admin panelden düşürülen kullanıcı anında yetkisini kaybeder); Redis tabanlı rate limit (kayıt 10/15dk, yorum 10/saat, Redis yokken fail-open).
 - **Hesap:** `/hesabim` — sipariş geçmişi; `/hesabim/[orderNumber]` — sipariş detayı (sahibi veya admin).
 - **Yorumlar:** girişli kullanıcı ürün başına bir yorum/puan (upsert, `productId+userId` benzersiz), ortalama puan.
 - **Stripe Checkout (production-safe):** sepet sunucuda doğrulanır, fiyatlar **DB'den okunur ve sipariş kalemlerine snapshot** alınır; checkout'ta varyant bazlı **atomik stok rezervasyonu** (`OrderReservation`). Webhook imza doğrulamalı + idempotent (`stripeSessionId`/`stripePaymentIntentId` benzersiz):
   - `checkout.session.completed` → Order + kalem snapshot'ları (isim/fiyat/SKU/görsel/beden/renk) oluşturur, rezervasyonu CONSUMED yapar.
   - `expired` / `async_payment_failed` → stok iade + CANCELLED/FAILED kaydı.
   - `charge.refunded` → stok geri + REFUNDED (`stockRestored` ile tek sefer).
-  - Sipariş numarası: `LD-2026-XXXXXX`. Ürün sonradan silinse bile sipariş kalemleri ayakta kalır.
+  - Sipariş numarası: `LD-2026-XXXXXX` (yıl dinamik, `generateOrderNumber()`). Ürün sonradan silinse bile sipariş kalemleri ayakta kalır.
+  - **Rezervasyon süre aşımı:** her rezervasyona `expiresAt` (24 saat) yazılır; `/api/cron/release-expired` (Vercel Cron, `CRON_SECRET` korumalı) ve checkout öncesi lazy cleanup (`releaseExpiredReservations`) süresi dolan rezervasyonları iade eder — Stripe webhook'u kaçsa/gecikse bile stok kilitlenmez.
 
 ### Admin paneli (`/admin`, sadece ADMIN)
 - **Dashboard:** ürün/sipariş/kullanıcı/kategori sayaçları; toplam + son 30 gün ciro; son 24 saat iptal/fail; aktif rezervasyon; **30 günlük günlük ciro SVG grafiği** (bağımlılıksız); en çok satanlar (adet + ciro); **düşük stok uyarıları (≤5)**; son siparişler.
@@ -91,6 +92,7 @@ cp .env.example .env
 | `AUTH_SECRET` | `npx auth secret` ile üretilebilir |
 | `AUTH_URL` / `NEXT_PUBLIC_APP_URL` | Uygulama adresi (yerel: `http://localhost:3000`); checkout redirect origin'i |
 | `NEXT_PUBLIC_SITE_URL` | SEO taban URL'i (canonical/OG/sitemap; yoksa `https://lastdance.store`) |
+| `CRON_SECRET` | Süresi dolan rezervasyon temizliği için Bearer token (`/api/cron/release-expired`) |
 
 > Not: `next.config.ts`'te görsel uzak host yalnızca `lh3.googleusercontent.com` (`/aida-public/**`) için açık. `public/uploads` lokaldir ve `images.remotePatterns` gerektirmez.
 
@@ -180,7 +182,7 @@ public/uploads/products/   # Admin görsel upload'ları (gitignore'lu)
 - `Account` / `Session` / `VerificationToken` — Auth.js adaptör tabloları
 - `Category` / `Product` / `ProductImage` / `ProductVariant` — katalog; varyant `productId+size+color` benzersiz, `sku` benzersiz. Product'ta **editorial alanlar:** `objectNumber` (LD-001…), `campaign`, `material`, `weight`, `fit`, `releaseDate`
 - `Order` / `OrderItem` — siparişler; `orderNumber` + `stripeSessionId` + `stripePaymentIntentId` benzersiz; kalemlerde ürün adı/fiyat/SKU/görsel snapshot'ı; `stockConsumed`/`stockRestored` bayrakları
-- `OrderReservation` — checkout'ta rezerve edilen stok kaydı (ACTIVE → CONSUMED/RELEASED); webhook buradan siparişi kurar veya süresi dolunca stoku iade eder
+- `OrderReservation` — checkout'ta rezerve edilen stok kaydı (ACTIVE → CONSUMED/RELEASED); `expiresAt` (24 saat) üzerinden cron/lazy cleanup ile süresi dolan rezervasyonlar iade edilir; webhook buradan siparişi kurar
 - `Cart` / `CartItem` — DB sepet şeması (aktif senkronizasyon Redis üzerinden)
 - `Review` — `productId+userId` benzersiz (kullanıcı ürün başına bir yorum)
 - `NewsletterSubscription` — abonelik e-postaları (`email` benzersiz, upsert)
@@ -197,6 +199,7 @@ public/uploads/products/   # Admin görsel upload'ları (gitignore'lu)
 | POST | `/api/checkout` | Stripe Checkout oturumu + stok rezervasyonu |
 | POST | `/api/webhooks/stripe` | Webhook (imza doğrulamalı, idempotent) → Order/refund |
 | POST | `/api/auth/register` | Kayıt (rate limit) |
+| GET | `/api/cron/release-expired` | Süresi dolan rezervasyonları iade eder (cron, `CRON_SECRET` Bearer) |
 | GET/POST | `/api/auth/[...nextauth]` | Auth.js handler'ı |
 | POST | `/api/admin/products` | Ürün oluştur (ADMIN) |
 | PUT/DELETE | `/api/admin/products/[id]` | Ürün güncelle/sil (ADMIN) |
@@ -235,6 +238,7 @@ npx prisma db seed   # veritabanını örnek veriyle doldurur
 - Stripe: canlı key'ler + endpoint/webhook secret; webhook URL'si prod adresine ayarlanmalıdır. `STRIPE_WEBHOOK_SECRET` boş/placeholder iken webhook 500 döner.
 - `AUTH_SECRET` prod ortamına ayrı ve güvenli bir değerle tanımlanmalıdır.
 - `NEXT_PUBLIC_SITE_URL` prod domain'ine ayarlanmalıdır (canonical/OG/sitemap/robots).
+- **Vercel Cron:** `https://<domain>/api/cron/release-expired` her gün `Authorization: Bearer $CRON_SECRET` ile çalıştırılmalı (cron saati günde bir yeterli; checkout öncesi lazy cleanup zaten ikinci katman). `CRON_SECRET` her ortamda benzersiz ve uzun olmalıdır.
 - **Görsel upload kalıcı değildir:** yüklemeler `public/uploads/` içine yazılır; Vercel serverless ortamında ephemeral'dir. Prod'ta CDN/object storage'a (ör. Cloudinary/UploadThing) geçilmeli — `/api/admin/upload` API yüzeyi (POST → `{ url }`) aynı kalacak şekilde değiştirilebilir.
 - Analytics: `@vercel/analytics` Vercel'de otomatik devreye girer; yerel geliştirmede no-op'dur.
 

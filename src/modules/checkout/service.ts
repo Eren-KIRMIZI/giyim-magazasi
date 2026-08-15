@@ -3,6 +3,8 @@ import { prisma } from "@/infrastructure/prisma";
 import {
   reserveStock,
   releaseStock,
+  releaseExpiredReservations,
+  reservationExpiresAt,
   RESERVATION_STATUS,
   type StockLine,
 } from "./reservation";
@@ -49,6 +51,14 @@ export async function createCheckoutSession(
 
   if (!Array.isArray(items) || items.length === 0) {
     throw new CheckoutValidationError("Sepet boş.");
+  }
+
+  // Lazy cleanup: süresi dolmuş ACTIVE rezervasyonları önce iade et
+  // (cron'a ek olarak checkout öncesi koruma — stok kilitlenmesini önler)
+  try {
+    await releaseExpiredReservations();
+  } catch (err) {
+    console.error("Expired reservation cleanup failed:", err);
   }
 
   const normalized: CheckoutLineItem[] = items.map((i) => ({
@@ -132,6 +142,7 @@ export async function createCheckoutSession(
         stripeSessionId: checkoutSession.id,
         userId,
         status: RESERVATION_STATUS.ACTIVE,
+        expiresAt: reservationExpiresAt(),
         items: resolved.map((ri) => ({
           productId: ri.productId,
           variantId: ri.variantId,

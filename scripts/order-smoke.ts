@@ -4,6 +4,7 @@ import { prisma } from "../src/infrastructure/prisma";
 import {
   reserveStock,
   releaseReservation,
+  releaseExpiredReservations,
   StockInsufficientError,
   RESERVATION_STATUS,
   type ReservationLine,
@@ -200,6 +201,52 @@ async function main() {
     where: { stripeSessionId: sessionId2 },
   });
   assert(reservation2?.status === "RELEASED", "reservation released");
+
+  console.log("releaseExpiredReservations → releases expired stock");
+  const sessionId3 = `cs_test_${ts}_3`;
+  const resolved3 = await prisma.$transaction((tx) =>
+    reserveStock(tx, [{ ...line, quantity: 1 }], nameMap, slugMap, imageMap, priceMap)
+  );
+  await prisma.orderReservation.create({
+    data: {
+      stripeSessionId: sessionId3,
+      userId: user.id,
+      status: RESERVATION_STATUS.ACTIVE,
+      expiresAt: new Date(Date.now() - 1000),
+      items: toLines(resolved3) as unknown as Prisma.InputJsonValue,
+    },
+  });
+  await releaseExpiredReservations();
+  v = await prisma.productVariant.findUnique({ where: { id: variant.id } });
+  assert(v?.stock === 1, `expired reservation restores variant stock (got ${v?.stock})`);
+  const reservation3 = await prisma.orderReservation.findUnique({
+    where: { stripeSessionId: sessionId3 },
+  });
+  assert(reservation3?.status === "RELEASED", "expired reservation released");
+
+  console.log("releaseExpiredReservations → future reservation untouched");
+  const sessionId4 = `cs_test_${ts}_4`;
+  const resolved4 = await prisma.$transaction((tx) =>
+    reserveStock(tx, [{ ...line, quantity: 1 }], nameMap, slugMap, imageMap, priceMap)
+  );
+  await prisma.orderReservation.create({
+    data: {
+      stripeSessionId: sessionId4,
+      userId: user.id,
+      status: RESERVATION_STATUS.ACTIVE,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      items: toLines(resolved4) as unknown as Prisma.InputJsonValue,
+    },
+  });
+  await releaseExpiredReservations();
+  v = await prisma.productVariant.findUnique({ where: { id: variant.id } });
+  assert(v?.stock === 0, `future reservation untouched (got ${v?.stock})`);
+  const reservation4 = await prisma.orderReservation.findUnique({
+    where: { stripeSessionId: sessionId4 },
+  });
+  assert(reservation4?.status === "ACTIVE", "future reservation still active");
+
+  await releaseReservation(sessionId4);
 
   console.log("applyOrderStatusChange (admin cancel → restore stock)");
   const orderForTransition = (await prisma.order.findUnique({
