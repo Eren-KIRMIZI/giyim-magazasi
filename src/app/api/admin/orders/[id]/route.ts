@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/modules/auth";
 import { prisma } from "@/infrastructure/prisma";
 import { applyOrderStatusChange, ORDER_STATUSES } from "@/modules/orders";
+import { logSecurity } from "@/lib/logger";
 
 export async function PATCH(
   request: Request,
@@ -37,6 +38,14 @@ export async function PATCH(
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 409 });
   }
+
+  logSecurity("admin order status change", {
+    actor: admin.user.email,
+    orderId: order.id,
+    orderNumber: order.orderNumber,
+    from: order.status,
+    to: body.status,
+  });
 
   const updated = await prisma.order.findUnique({ where: { id } });
   return NextResponse.json({ order: updated });

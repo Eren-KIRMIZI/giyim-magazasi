@@ -19,7 +19,7 @@ Brutalist tasarımlı, tam yığın (full-stack) e-ticaret mağazası. Next.js 1
 - **İkonlar:** `components/icons.tsx` — tüm ikonlar **inline SVG** (Material Symbols bağımlılığı yok).
 
 ### Kimlik, hesap ve sipariş
-- **Kimlik doğrulama:** kayıt + giriş (`/giris`), `bcryptjs` hash, rol (ADMIN/CUSTOMER) JWT session'da; `session` callback'i rolü **her istekte DB'den taze okur** (admin panelden düşürülen kullanıcı anında yetkisini kaybeder); Redis tabanlı rate limit (kayıt 10/15dk, yorum 10/saat, Redis yokken fail-open).
+- **Kimlik doğrulama:** kayıt + giriş (`/giris`), `bcryptjs` hash (cost 12), rol (ADMIN/CUSTOMER) JWT session'da; `session` callback'i rolü **her istekte DB'den taze okur** (admin panelden düşürülen kullanıcı anında yetkisini kaybeder); Redis tabanlı rate limit (**login 10/15dk e-posta+IP bazlı**, kayıt 10/15dk, yorum 10/saat, Redis yokken fail-open). Kayıtta **şifre politikası:** en az 8 karakter + büyük/küçük harf + rakam; mevcut e-posta çakışmasında **enumeration önleyici** genel mesaj döner.
 - **Hesap:** `/hesabim` — sipariş geçmişi; `/hesabim/[orderNumber]` — sipariş detayı (sahibi veya admin).
 - **Yorumlar:** girişli kullanıcı ürün başına bir yorum/puan (upsert, `productId+userId` benzersiz), ortalama puan.
 - **Stripe Checkout (production-safe):** sepet sunucuda doğrulanır, fiyatlar **DB'den okunur ve sipariş kalemlerine snapshot** alınır; checkout'ta varyant bazlı **atomik stok rezervasyonu** (`OrderReservation`). Webhook imza doğrulamalı + idempotent (`stripeSessionId`/`stripePaymentIntentId` benzersiz):
@@ -218,6 +218,23 @@ npm run test:order          # stok rezervasyonu/iade, sipariş oluşturma, snaps
 npm run test:webhook        # webhook imza doğrulama (eksik/bozuk→400, secretsız→500),
                             # expired/completed/refunded akışları + replay idempotency
 ```
+
+## Güvenlik (OWASP Top 10)
+
+| Alan | Durum |
+| --- | --- |
+| A01 Yetkilendirme | Tüm admin API'lerinde `requireAdmin()`; hesap sipariş detayı sahiplik/ADMIN kontrolü; sepet Redis key'i kullanıcıya bağlı |
+| A02 Kriptografi | bcrypt cost 12, JWT `AUTH_SECRET`, düz metin şifre yok |
+| A03 Enjeksiyon | Prisma parametrik sorgular (raw SQL yok); React otomatik escape; JSON-LD `<script>`'ler `serializeJsonLd()` ile escape edilir |
+| A04 Tasarım | Rezervasyon expiry (`expiresAt` + cron + lazy cleanup); rate limitler aktif |
+| A05 Yanlış yapılandırma | `next.config.ts` güvenlik başlıkları: **CSP** (script-src 'self' + va.vercel-scripts.com, frame-ancestors 'none', base-uri 'self', object-src 'none'), **HSTS** (2 yıl + preload), X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy |
+| A06 Bileşenler | `npm audit --omit=dev` → 0 vulnerability |
+| A07 Kimlik doğrulama | Login brute-force koruması (10 deneme/15dk e-posta+IP); kayıt enumeration önlemi; güçlü şifre politikası; taze rol |
+| A08 Bütünlük | Webhook imza doğrulaması + idempotency; fiyat snapshot'ları; amount-mismatch kontrolü; package-lock |
+| A09 Loglama/izleme | Yapılandırılmış güvenlik logları (`lib/logger.ts` `[security]` JSON): login başarısız/rate-limited, admin rol değişimi, kullanıcı silme, ürün silme, sipariş durumu değişimi |
+| A10 SSRF | Server-side kullanıcı URL fetch'i yok; `next/image` yalnızca `lh3.googleusercontent.com/aida-public/**`; OG ImageResponse fetch içermiyor |
+
+CSP, ISR/statik sayfaları korumak için nonce'siz kuruldu (Next 16 dokümanındaki önerilen yöntem); `script-src 'unsafe-inline'` JSON-LD ve Next.js bootstrap script'leri için gereklidir, JSON-LD escape'i ile XSS riski kapatılır. `va.vercel-scripts.com` Vercel Analytics için izinlidir.
 
 ## Scriptler
 

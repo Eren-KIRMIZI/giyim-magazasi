@@ -6,6 +6,7 @@ import {
   getRecommendedProducts,
 } from "@/modules/catalog";
 import { SITE_URL } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/jsonLd";
 import ProductDetail from "./ProductDetail";
 
 export const revalidate = 300;
@@ -117,11 +118,11 @@ export default async function ProductPage({
     <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(productJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
       <ProductDetail product={product} recommended={recommended} />
     </div>

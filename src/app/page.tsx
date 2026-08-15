@@ -4,6 +4,7 @@ import NewArrivalsSection from "@/components/ui/NewArrivalsSection";
 import CollectionsSection from "@/components/ui/CollectionsSection";
 import { brandLogo } from "@/lib/data";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/jsonLd";
 
 export const revalidate = 60;
 
@@ -40,7 +41,7 @@ export default function HomePage() {
     <div className="w-full max-w-container-max mx-auto">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationJsonLd) }}
       />
       <HeroSection />
       <NewArrivalsSection />

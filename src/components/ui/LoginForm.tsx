@@ -124,7 +124,7 @@ export default function LoginForm() {
             id="password"
             type="password"
             required
-            minLength={6}
+            minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"

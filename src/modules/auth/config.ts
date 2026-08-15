@@ -3,6 +3,8 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/infrastructure/prisma";
+import { rateLimit, clientIp } from "@/infrastructure/redis/rate-limit";
+import { logSecurity } from "@/lib/logger";
 
 declare module "next-auth" {
   interface Session {
@@ -29,16 +31,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "E-posta", type: "email" },
         password: { label: "Şifre", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const email = credentials?.email as string | undefined;
         const password = credentials?.password as string | undefined;
         if (!email || !password) return null;
 
+        // Brute-force koruması: e-posta + IP başına 10 deneme / 15 dk
+        const ip = request ? clientIp(request) : "unknown";
+        const limited = await rateLimit(`login:${email.toLowerCase()}:${ip}`, 10, 900);
+        if (!limited.ok) {
+          logSecurity("login rate-limited", { email, ip });
+          return null;
+        }
+
         const user = await prisma.user.findUnique({ where: { email } });
-        if (!user?.passwordHash) return null;
+        if (!user?.passwordHash) {
+          logSecurity("failed login (no user)", { email, ip });
+          return null;
+        }
 
         const valid = await bcrypt.compare(password, user.passwordHash);
-        if (!valid) return null;
+        if (!valid) {
+          logSecurity("failed login (bad password)", { email, ip });
+          return null;
+        }
 
         return {
           id: user.id,

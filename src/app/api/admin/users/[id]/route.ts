@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/modules/auth";
 import { prisma } from "@/infrastructure/prisma";
+import { logSecurity } from "@/lib/logger";
 
 const VALID_ROLES = ["CUSTOMER", "ADMIN"];
 
@@ -56,6 +57,13 @@ export async function PATCH(
     data: { role },
   });
 
+  logSecurity("admin role change", {
+    actor: admin.user.email,
+    target: target.email,
+    from: target.role,
+    to: role,
+  });
+
   return NextResponse.json({ id: user.id, role: user.role });
 }
 
@@ -107,6 +115,11 @@ export async function DELETE(
   }
 
   await prisma.user.delete({ where: { id } });
+
+  logSecurity("admin user delete", {
+    actor: admin.user.email,
+    target: target.email,
+  });
 
   return NextResponse.json({ ok: true });
 }

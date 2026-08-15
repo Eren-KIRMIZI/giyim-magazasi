@@ -9,6 +9,7 @@ import {
   AdminProductNotFoundError,
   AdminProductInUseError,
 } from "@/modules/admin";
+import { logSecurity } from "@/lib/logger";
 
 export async function PUT(
   request: Request,
@@ -61,6 +62,7 @@ export async function DELETE(
 
   try {
     await deleteProduct(id);
+    logSecurity("admin product delete", { actor: admin.user.email, productId: id });
     return NextResponse.json({ ok: true });
   } catch (err) {
     if (err instanceof AdminProductNotFoundError) {
