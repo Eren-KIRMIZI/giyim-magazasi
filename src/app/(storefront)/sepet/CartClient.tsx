@@ -5,6 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCartStore, cartItemKey } from "@/modules/cart";
 import { formatPrice } from "@/lib/data";
+import EmptyState from "@/components/ui/EmptyState";
+import { Icon } from "@/components/icons";
+
+const FREE_SHIPPING_THRESHOLD = 100;
 
 export default function CartClient() {
   const items = useCartStore((s) => s.items);
@@ -16,6 +20,11 @@ export default function CartClient() {
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const shippingProgress = Math.min(subtotal / FREE_SHIPPING_THRESHOLD, 1);
+  const remainingForFree = Math.max(
+    FREE_SHIPPING_THRESHOLD - subtotal,
     0
   );
 
@@ -52,19 +61,14 @@ export default function CartClient() {
 
   if (items.length === 0) {
     return (
-      <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col items-center justify-center gap-stack-md min-h-[50vh]">
-        <h1 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg uppercase text-on-surface">
-          Your Bag is Empty
-        </h1>
-        <p className="font-body-lg text-body-lg text-on-surface-variant">
-          The archive awaits. Secure your drop before it&apos;s gone.
-        </p>
-        <Link
-          href="/koleksiyonlar"
-          className="inline-block bg-on-surface text-surface font-headline-md text-headline-md uppercase px-8 py-4 hover:bg-primary transition-colors duration-200"
-        >
-          Shop Now
-        </Link>
+      <div className="w-full max-w-container-max mx-auto">
+        <EmptyState
+          icon="shopping_bag"
+          title="Your Bag is Empty"
+          description="The archive awaits. Secure your drop before it's gone."
+          actionLabel="Shop Now"
+          actionHref="/koleksiyonlar"
+        />
       </div>
     );
   }
@@ -93,14 +97,14 @@ export default function CartClient() {
             >
               <Link
                 href={`/urunler/${item.slug}`}
-                className="relative w-24 h-32 flex-shrink-0 bg-surface-container overflow-hidden"
+                className="relative w-24 h-32 flex-shrink-0 bg-surface-container overflow-hidden group"
               >
                 <Image
                   src={item.image}
                   alt={item.name}
                   fill
                   sizes="96px"
-                  className="object-cover"
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />
               </Link>
               <div className="flex flex-col justify-between flex-1 gap-2">
@@ -131,6 +135,7 @@ export default function CartClient() {
                   <div className="flex items-center border border-on-surface">
                     <button
                       type="button"
+                      aria-label={`Decrease quantity of ${item.name}`}
                       onClick={() =>
                         updateQuantity(
                           item.productId,
@@ -139,7 +144,7 @@ export default function CartClient() {
                           item.color
                         )
                       }
-                      className="w-9 h-9 flex items-center justify-center font-label-mono text-label-mono hover:bg-on-surface hover:text-surface transition-colors"
+                      className="w-9 h-9 flex items-center justify-center font-label-mono text-label-mono hover:bg-on-surface hover:text-surface active:scale-90 transition-all duration-150"
                     >
                       -
                     </button>
@@ -148,6 +153,7 @@ export default function CartClient() {
                     </span>
                     <button
                       type="button"
+                      aria-label={`Increase quantity of ${item.name}`}
                       onClick={() =>
                         updateQuantity(
                           item.productId,
@@ -160,7 +166,7 @@ export default function CartClient() {
                         item.maxQuantity != null &&
                         item.quantity >= item.maxQuantity
                       }
-                      className="w-9 h-9 flex items-center justify-center font-label-mono text-label-mono hover:bg-on-surface hover:text-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="w-9 h-9 flex items-center justify-center font-label-mono text-label-mono hover:bg-on-surface hover:text-surface active:scale-90 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       +
                     </button>
@@ -182,10 +188,39 @@ export default function CartClient() {
         </div>
 
         <div className="md:col-span-4">
-          <div className="border border-on-surface bg-surface p-stack-md flex flex-col gap-stack-md">
+          <div className="md:sticky md:top-24 border border-on-surface bg-surface p-stack-md flex flex-col gap-stack-md">
             <h2 className="font-headline-md text-headline-md uppercase border-b border-on-surface pb-stack-sm">
               Order Summary
             </h2>
+            <div className="flex flex-col gap-2 border border-on-surface bg-surface-container-low p-3">
+              <div className="flex justify-between items-center gap-2">
+                <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
+                  Free Shipping
+                </span>
+                <span
+                  className={`font-label-mono text-label-mono uppercase ${
+                    remainingForFree > 0
+                      ? "text-on-surface"
+                      : "text-primary"
+                  }`}
+                >
+                  {remainingForFree > 0
+                    ? `${formatPrice(remainingForFree)} to go`
+                    : "Unlocked"}
+                </span>
+              </div>
+              <div className="h-1 w-full bg-surface-container-highest overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all duration-500 ease-out"
+                  style={{ width: `${shippingProgress * 100}%` }}
+                />
+              </div>
+              <p className="font-label-mono text-label-mono uppercase text-on-surface-variant text-[11px]">
+                {remainingForFree > 0
+                  ? `Add ${formatPrice(remainingForFree)} more for free shipping`
+                  : "You've unlocked free shipping"}
+              </p>
+            </div>
             <div className="flex justify-between items-center">
               <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
                 Subtotal
@@ -214,9 +249,15 @@ export default function CartClient() {
               type="button"
               onClick={handleCheckout}
               disabled={checkoutLoading}
-              className="w-full bg-on-surface text-surface font-headline-md text-headline-md uppercase py-4 hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-on-surface text-surface font-headline-md text-headline-md uppercase py-4 hover:bg-primary hover:text-on-primary hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {checkoutLoading ? "Redirecting..." : "Proceed to Checkout"}
+              <span>
+                {checkoutLoading ? "Redirecting..." : "Proceed to Checkout"}
+              </span>
+              <Icon
+                name={checkoutLoading ? "progress_activity" : "arrow_forward"}
+                className={`w-5 h-5 ${checkoutLoading ? "animate-spin" : ""}`}
+              />
             </button>
             {checkoutError && (
               <div className="flex flex-col gap-2 items-center">

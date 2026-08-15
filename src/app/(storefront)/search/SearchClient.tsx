@@ -187,6 +187,36 @@ export default function SearchClient({
     [state]
   );
 
+  const chips: { key: string; label: string; onRemove: () => void }[] = [];
+  state.categories.forEach((c) => {
+    const cat = categories.find((x) => x.value === c);
+    chips.push({
+      key: `cat-${c}`,
+      label: cat?.label ?? c,
+      onRemove: () => toggle("categories", c),
+    });
+  });
+  state.sizes.forEach((s) =>
+    chips.push({ key: `size-${s}`, label: s, onRemove: () => toggle("sizes", s) })
+  );
+  state.colors.forEach((c) =>
+    chips.push({ key: `color-${c}`, label: c, onRemove: () => toggle("colors", c) })
+  );
+  if (state.minPrice != null || state.maxPrice != null) {
+    chips.push({
+      key: "price",
+      label: `€${state.minPrice ?? 0}–€${state.maxPrice ?? "∞"}`,
+      onRemove: () => apply({ ...state, minPrice: null, maxPrice: null }),
+    });
+  }
+  if (state.inStockOnly) {
+    chips.push({
+      key: "stock",
+      label: "In Stock",
+      onRemove: () => apply({ ...state, inStockOnly: false }),
+    });
+  }
+
   return (
     <main className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
       <div className="flex flex-col md:flex-row gap-gutter">
@@ -263,6 +293,33 @@ export default function SearchClient({
               </select>
             </label>
           </div>
+
+          {chips.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mb-stack-md">
+              {chips.map((chip) => (
+                <button
+                  key={chip.key}
+                  type="button"
+                  onClick={chip.onRemove}
+                  aria-label={`Remove filter ${chip.label}`}
+                  className="group flex items-center gap-1.5 border border-on-surface px-2.5 py-1 font-label-mono text-label-mono uppercase text-on-surface hover:bg-on-surface hover:text-surface active:scale-95 transition-all duration-150"
+                >
+                  {chip.label}
+                  <Icon
+                    name="close"
+                    className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity"
+                  />
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={clearAll}
+                className="link-sweep font-label-mono text-label-mono uppercase text-on-surface-variant hover:text-primary transition-colors ml-1"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
 
           {products.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-gutter">

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/modules/cart";
@@ -38,6 +38,13 @@ export default function Header() {
     if (href.startsWith("/#")) return pathname === "/";
     return pathname.startsWith(href);
   };
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
 
   return (
     <header className="relative">
@@ -156,51 +163,72 @@ export default function Header() {
           </div>
         </div>
 
-        {menuOpen && (
-          <div className="md:hidden border-t border-on-surface bg-surface">
-            <div className="flex flex-col px-margin-mobile py-stack-md gap-stack-sm">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  onClick={() => setMenuOpen(false)}
-                  className={`font-headline-md text-headline-md uppercase transition-all duration-200 ${
-                    isActive(link.href)
-                      ? "text-primary pl-1"
-                      : "text-on-surface hover:text-primary hover:pl-2"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <div className="flex items-center gap-stack-md mt-stack-sm">
-                <Link
-                  href="/search"
-                  onClick={() => setMenuOpen(false)}
-                  className="font-headline-md text-headline-md uppercase text-on-surface hover:text-primary transition-colors flex items-center gap-2"
-                >
-                  <Icon name="search" className="w-[22px] h-[22px]" />
-                  Search
-                </Link>
-                <Link
-                  href="/begendiklerim"
-                  onClick={() => setMenuOpen(false)}
-                  className="font-headline-md text-headline-md uppercase text-on-surface hover:text-primary transition-colors flex items-center gap-2"
-                >
-                  <Icon name="favorite" className="w-[22px] h-[22px]" />
-                  Wishlist
-                  {wishlistCount > 0 && ` (${wishlistCount})`}
-                </Link>
-              </div>
-              <div className="border-t border-on-surface pt-stack-sm mt-stack-sm flex items-center justify-between">
-                <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
-                  Theme
-                </span>
-                <ThemeToggle />
-              </div>
+        <div
+          aria-hidden={!menuOpen}
+          className={`md:hidden fixed inset-0 z-40 bg-surface flex flex-col transition-opacity duration-300 ${
+            menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+        >
+          <nav className="flex flex-col gap-5 px-margin-mobile py-stack-lg pt-28 overflow-y-auto flex-1">
+            {NAV_LINKS.map((link, i) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                style={{ transitionDelay: menuOpen ? `${120 + i * 70}ms` : "0ms" }}
+                className={`font-headline-lg text-headline-lg-mobile md:text-headline-lg uppercase tracking-tight transition-all duration-500 ease-out ${
+                  menuOpen
+                    ? "translate-y-0 opacity-100"
+                    : "translate-y-6 opacity-0"
+                } ${isActive(link.href) ? "text-primary" : "text-on-surface"}`}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <div
+              style={{ transitionDelay: menuOpen ? `${120 + NAV_LINKS.length * 70}ms` : "0ms" }}
+              className={`flex items-center gap-stack-md mt-stack-sm transition-all duration-500 ease-out ${
+                menuOpen ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+              }`}
+            >
+              <Link
+                href="/search"
+                onClick={() => setMenuOpen(false)}
+                className="font-headline-md text-headline-md uppercase text-on-surface hover:text-primary transition-colors flex items-center gap-2"
+              >
+                <Icon name="search" className="w-[22px] h-[22px]" />
+                Search
+              </Link>
+              <Link
+                href="/begendiklerim"
+                onClick={() => setMenuOpen(false)}
+                className="font-headline-md text-headline-md uppercase text-on-surface hover:text-primary transition-colors flex items-center gap-2"
+              >
+                <Icon name="favorite" className="w-[22px] h-[22px]" />
+                Wishlist
+                {wishlistCount > 0 && ` (${wishlistCount})`}
+              </Link>
             </div>
-          </div>
-        )}
+            <div
+              style={{ transitionDelay: menuOpen ? `${180 + NAV_LINKS.length * 70}ms` : "0ms" }}
+              className={`border-t border-on-surface pt-stack-sm mt-stack-sm flex items-center justify-between transition-all duration-500 ease-out ${
+                menuOpen ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+              }`}
+            >
+              <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
+                Theme
+              </span>
+              <ThemeToggle />
+            </div>
+            <p
+              className={`font-label-mono text-label-mono uppercase text-on-surface-variant mt-auto pt-stack-lg transition-opacity duration-500 ${
+                menuOpen ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              LAST DANCE — Official Store
+            </p>
+          </nav>
+        </div>
       </nav>
     </header>
   );

@@ -6,6 +6,9 @@ import Image from "next/image";
 import gsap from "gsap";
 import { heroImage } from "@/lib/data";
 
+const CAMPAIGN_BAND =
+  "The Final Drop — Secure the Archive — Campaign 001 — Free Shipping over €100";
+
 export default function HeroSection() {
   const rootRef = useRef<HTMLElement>(null);
 
@@ -83,9 +86,22 @@ export default function HeroSection() {
             sizes="(max-width: 768px) 100vw, 58vw"
             className="object-cover object-center"
           />
+          <div className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2">
+            <span className="bg-on-surface/80 backdrop-blur-sm text-surface font-label-mono text-label-mono uppercase tracking-[0.3em] px-2 py-3 [writing-mode:vertical-rl]">
+              Est. 2026 — The Archive
+            </span>
+          </div>
           <div className="absolute bottom-stack-md right-stack-md bg-on-surface text-surface font-label-mono text-label-mono px-3 py-1 uppercase">
             Campaign 001
           </div>
+        </div>
+      </div>
+      <div className="bg-on-surface text-surface font-label-mono text-label-mono uppercase tracking-widest py-3 overflow-hidden border-t border-on-surface">
+        <div className="flex w-max whitespace-nowrap animate-[marquee_32s_linear_infinite] hover:[animation-play-state:paused]">
+          <span className="px-margin-mobile">{CAMPAIGN_BAND} &nbsp;&middot;&nbsp;</span>
+          <span className="px-margin-mobile" aria-hidden="true">
+            {CAMPAIGN_BAND} &nbsp;&middot;&nbsp;
+          </span>
         </div>
       </div>
     </section>

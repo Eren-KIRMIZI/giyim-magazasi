@@ -110,6 +110,17 @@ export default function ProductDetail({
     : null;
   const lowStock = selectedStock != null && selectedStock > 0 && selectedStock <= 5;
 
+  const goToImage = (index: number) => {
+    const total = product.images.length;
+    const next = (index + total) % total;
+    if (next === activeImage) return;
+    setImageChanging(true);
+    setTimeout(() => {
+      setActiveImage(next);
+      setImageChanging(false);
+    }, 200);
+  };
+
   const handleThumbClick = (index: number) => {
     if (index === activeImage) return;
     setImageChanging(true);
@@ -173,6 +184,30 @@ export default function ProductDetail({
               <div className="absolute top-stack-sm left-stack-sm bg-primary text-on-primary font-label-mono text-label-mono px-2 py-1">
                 {product.badge}
               </div>
+            )}
+            {product.images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  aria-label="Previous image"
+                  onClick={() => goToImage(activeImage - 1)}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-surface/80 backdrop-blur-sm border border-on-surface/20 flex items-center justify-center text-on-surface hover:bg-on-surface hover:text-surface active:scale-90 transition-all duration-200"
+                >
+                  <Icon name="arrow_forward" className="w-5 h-5 rotate-180" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next image"
+                  onClick={() => goToImage(activeImage + 1)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-surface/80 backdrop-blur-sm border border-on-surface/20 flex items-center justify-center text-on-surface hover:bg-on-surface hover:text-surface active:scale-90 transition-all duration-200"
+                >
+                  <Icon name="arrow_forward" className="w-5 h-5" />
+                </button>
+                <div className="absolute bottom-2 right-2 bg-surface/80 backdrop-blur-sm border border-on-surface/20 font-label-mono text-label-mono px-2 py-1">
+                  {String(activeImage + 1).padStart(2, "0")} /{" "}
+                  {String(product.images.length).padStart(2, "0")}
+                </div>
+              </>
             )}
           </div>
           {product.images.length > 1 && (
@@ -249,9 +284,24 @@ export default function ProductDetail({
                 })}
               </div>
               {lowStock && (
-                <p className="mt-3 font-label-mono text-label-mono uppercase text-error">
-                  Son {selectedStock} adet
-                </p>
+                <div className="mt-3">
+                  <div className="flex justify-between items-center mb-1">
+                    <p className="font-label-mono text-label-mono uppercase text-error">
+                      Son {selectedStock} adet
+                    </p>
+                    <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
+                      Stock
+                    </span>
+                  </div>
+                  <div className="h-1 w-full bg-surface-container-highest overflow-hidden">
+                    <div
+                      className="h-full bg-error transition-all duration-500"
+                      style={{
+                        width: `${Math.min((selectedStock ?? 5) / 5, 1) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
               )}
             </div>
 
@@ -272,7 +322,7 @@ export default function ProductDetail({
                       type="button"
                       onClick={() => setActiveColor(color.name)}
                       title={color.name}
-                      className={`w-9 h-9 border flex items-center justify-center transition-colors cursor-pointer ${
+                      className={`w-9 h-9 border flex items-center justify-center active:scale-90 transition-all duration-150 cursor-pointer ${
                         activeColor === color.name
                           ? "border-on-surface ring-2 ring-primary"
                           : "border-outline hover:border-on-surface"

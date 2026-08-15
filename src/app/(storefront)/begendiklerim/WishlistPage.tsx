@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useWishlistStore } from "@/modules/wishlist";
 import { formatPrice } from "@/lib/data";
 import WishlistButton from "@/components/ui/WishlistButton";
+import EmptyState from "@/components/ui/EmptyState";
 
 export default function WishlistPage() {
   const items = useWishlistStore((s) => s.items);
@@ -21,17 +22,13 @@ export default function WishlistPage() {
       </div>
 
       {items.length === 0 ? (
-        <div className="py-stack-lg text-center border border-on-surface">
-          <p className="font-headline-md text-headline-md uppercase text-on-surface-variant mb-stack-md">
-            Your wishlist is empty
-          </p>
-          <Link
-            href="/koleksiyonlar"
-            className="font-label-mono text-label-mono uppercase border border-on-surface px-6 py-2 hover:bg-on-surface hover:text-surface transition-colors inline-block"
-          >
-            Browse Collections
-          </Link>
-        </div>
+        <EmptyState
+          icon="favorite"
+          title="Your wishlist is empty"
+          description="Save the objects you can't stop thinking about — before they're gone."
+          actionLabel="Browse Collections"
+          actionHref="/koleksiyonlar"
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
           {items.map((item) => (
@@ -62,17 +59,17 @@ export default function WishlistPage() {
                 <h3 className="font-label-mono text-label-mono uppercase text-on-surface tracking-widest">
                   {item.name}
                 </h3>
-                <div className="inline-block bg-on-surface text-surface font-label-mono text-label-mono px-2 py-1 self-start">
+                <div className="inline-block bg-on-surface text-surface font-label-mono text-label-mono px-2 py-1 self-start transition-colors duration-300 group-hover:bg-primary">
                   {formatPrice(item.price)}
                 </div>
                 <div className="mt-auto pt-2 flex items-center justify-between">
                   <Link
                     href={`/urunler/${item.slug}`}
-                    className="font-label-mono text-label-mono uppercase text-primary hover:text-on-surface transition-colors"
+                    className="link-sweep font-label-mono text-label-mono uppercase text-primary hover:text-on-surface transition-colors"
                   >
                     View
                   </Link>
-                  <WishlistButton item={item} className="w-8 h-8 text-on-surface hover:text-primary" />
+                  <WishlistButton item={item} className="w-8 h-8 text-on-surface hover:text-primary active:scale-90 transition-all" />
                 </div>
               </div>
             </div>

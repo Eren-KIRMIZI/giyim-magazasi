@@ -4,7 +4,7 @@ interface IconProps {
   filled?: boolean;
 }
 
-type IconName =
+export type IconName =
   | "search"
   | "person"
   | "favorite"

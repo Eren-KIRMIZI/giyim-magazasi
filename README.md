@@ -5,18 +5,21 @@ Brutalist tasarımlı, tam yığın (full-stack) e-ticaret mağazası. Next.js 1
 ## Özellikler
 
 ### Vitrin
-- **Anasayfa:** hero + yeni gelenler + koleksiyon bölümleri; `Reveal` bileşeni **IntersectionObserver + CSS transition** ile çalışır (`prefers-reduced-motion` destekli); `template.tsx` **GSAP sayfa geçiş animasyonu** (reduced-motion'da kapalı).
-- **Header:** üst duyuru bandı ("The Final Drop — Free shipping over €100"), sticky + `backdrop-blur` navigasyon, aktif link alt çizgisi, gerçek nav linkleri (New Arrivals / Collections / Newsletter), arama-wishlist-sepet ikonları (inline SVG), sepet/favori rozetleri, mobil menü.
+- **Anasayfa:** hero + yeni gelenler + koleksiyon bölümleri; `Reveal` bileşeni **IntersectionObserver + CSS transition** ile çalışır (`prefers-reduced-motion` destekli); `template.tsx` **GSAP sayfa geçiş animasyonu** (reduced-motion'da kapalı). **Hero:** dikey "Est. 2026 — The Archive" etiketi + kampanya **marquee bandı** ("The Final Drop — Secure the Archive — Campaign 001 …").
+- **Header:** üst duyuru bandı **marquee** animasyonlu ("The Final Drop — Free shipping over €100", hover'da duraklar), sticky + `backdrop-blur` navigasyon, aktif link alt çizgisi, gerçek nav linkleri (New Arrivals / Collections / Newsletter), arama-wishlist-sepet ikonları (inline SVG), sepet/favori rozetleri, **tam ekran mobil menü** (stagger'la beliren dev başlıklar, açıkken body scroll kilidi, tema + arama/favori satırları).
 - **Ürün kartı (editorial redesign):** ürün sırasına göre **"No. 001"** etiketi, ürün **renk numuneleri (swatches)**, hover'da "View Object" + ikinci görsele geçiş, favori kalbi.
 - **Koleksiyonlar:** `/koleksiyonlar` — kategori, beden ve fiyat filtresi; mobilde toggle panel; "Recently Viewed" bölümü; üstte **kampanya bandı** ("Archive // Campaign 001 — The Final Drop").
-- **Arama:** `/search` — server-side arama (`?q=&kategori=&beden=&renk=&fiyatmin=&fiyatmax=&stok=1&sirala=`), ILIKE tabanlı (isim/alt başlık/açıklama), sıralama: newest / price_asc / price_desc / popular (sipariş adedine göre). Filtreler URL'e yazılır (paylaşılabilir, SSR); `/search` noindex; `loading.tsx` iskelet ekranı. Header'daki arama ikonu buraya gider.
-- **Ürün detayı:** `/urunler/[slug]` (SSG, slug tabanlı) — görsel galeri, beden/renk seçimi, varyant bazlı **stok kontrolü** (seçili size+color'a göre; 0 stokta buton disabled + "Sold Out", ≤5 stokta "Son X adet" uyarısı), **Add to Bag + Buy Now** (sepete ekleyip `/sepet`'e yönlendirir), favori butonu, "Complete the Look" önerileri (**aynı kategori öncelikli**), yorumlar, mobilde **sticky add-to-cart barı**. **Editorial bölüm:** `OBJECT / STATUS / SPEC` — object number, kampanya, kumaş/materyal, gramaj, kalıp ve çıkış tarihi (DB'den).
-- **Wishlist (favoriler):** `/begendiklerim` — Zustand + localStorage kalıcılığı; ürün kartlarında kalp, ürün detayında buton, Header'da rozetli kalp + mobil menü linki.
+- **Arama:** `/search` — server-side arama (`?q=&kategori=&beden=&renk=&fiyatmin=&fiyatmax=&stok=1&sirala=`), ILIKE tabanlı (isim/alt başlık/açıklama), sıralama: newest / price_asc / price_desc / popular (sipariş adedine göre). Filtreler URL'e yazılır (paylaşılabilir, SSR); **aktif filtre çipleri + "Clear all"** (URL'deki her filtreden tek tıkla kaldırma); `/search` noindex; `loading.tsx` iskelet ekranı. Header'daki arama ikonu buraya gider.
+- **Ürün detayı:** `/urunler/[slug]` (SSG, slug tabanlı) — görsel galeri (**ok/klavye geçişi + `01 / 04` sayaç**, minyatürler), beden/renk seçimi (renk swatch'larında press geri bildirimi), varyant bazlı **stok kontrolü** (seçili size+color'a göre; 0 stokta buton disabled + "Sold Out", ≤5 stokta **"Son X adet" uyarısı + kırmızı stok çubuğu**), **Add to Bag + Buy Now** (sepete ekleyip `/sepet`'e yönlendirir), favori butonu, "Complete the Look" önerileri (**aynı kategori öncelikli**), yorumlar, mobilde **sticky add-to-cart barı**. **Editorial bölüm:** `OBJECT / STATUS / SPEC` — object number, kampanya, kumaş/materyal, gramaj, kalıp ve çıkış tarihi (DB'den).
+- **Wishlist (favoriler):** `/begendiklerim` — Zustand + localStorage kalıcılığı; ürün kartlarında kalp, ürün detayında buton, Header'da rozetli kalp + mobil menü linki; **boş durum EmptyState** (ikon + CTA ile).
+- **Dark mode:** `.dark` altında CSS değişkeni override'ları (`globals.css`, `@custom-variant dark`) — token kullanan tüm bileşenler otomatik uyum sağlar; `ThemeToggle` (`useSyncExternalStore` + localStorage + sistem tercihi), layout'ta **no-flash inline script**; footer/duyuru bandı gibi istisnalar `dark:` sınıflarıyla ayarlanır.
 - **Yakın zamanda bakılanlar:** localStorage'da tutulur (max 8), `/koleksiyonlar` altında listelenir.
-- **Sepet:** Zustand + localStorage; **adet üst sınırı stokla clamp'lenir** (varyant `maxQuantity`), girişli kullanıcılarda Redis senkronizasyonu.
+- **Sepet:** Zustand + localStorage; **adet üst sınırı stokla clamp'lenir** (varyant `maxQuantity`), girişli kullanıcılarda Redis senkronizasyonu. **UI cilası:** boş sepet EmptyState, sticky özet paneli, **€100 kargo ilerleme çubuğu** ("Free Shipping — €X to go / Unlocked"), checkout butonunda ok + yükleme animasyonu, ürün minyatürlerinde hover zoom, miktar butonlarında press geri bildirimi.
 - **Newsletter:** `/newsletter` sayfası + `/api/newsletter` (e-posta doğrulama, IP bazlı rate limit 5/saat, `NewsletterSubscription` tablosuna upsert, "ACCESS GRANTED" onayı); anasayfa `CollectionsSection` içindeki form da aynı API'yi kullanır.
 - **Bilgi sayfaları:** `/shipping`, `/returns`, `/terms`, `/contact` — footer linkleri; özel **404** (`not-found.tsx`), hata (`error.tsx` + `retry`) ve kök hata (`global-error.tsx`) sayfaları.
 - **İkonlar:** `components/icons.tsx` — tüm ikonlar **inline SVG** (Material Symbols bağımlılığı yok).
+- **Ortak UI:** `components/ui/EmptyState.tsx` (ikon + başlık + açıklama + CTA) ve `components/ui/Skeleton.tsx` — boş/yükleme durumlarında standartlaştırılmış bileşenler.
+- **Etkileşim katmanı (`globals.css`):** `focus-visible` halkası, buton imleci, görsel drag engelleme, kalın scrollbar, `.link-sweep` link animasyonu, `marquee` keyframes.
 
 ### Kimlik, hesap ve sipariş
 - **Kimlik doğrulama:** kayıt + giriş (`/giris`), `bcryptjs` hash (cost 12), rol (ADMIN/CUSTOMER) JWT session'da; `session` callback'i rolü **her istekte DB'den taze okur** (admin panelden düşürülen kullanıcı anında yetkisini kaybeder); Redis tabanlı rate limit (**login 10/15dk e-posta+IP bazlı**, kayıt 10/15dk, yorum 10/saat, Redis yokken fail-open). Kayıtta **şifre politikası:** en az 8 karakter + büyük/küçük harf + rakam; mevcut e-posta çakışmasında **enumeration önleyici** genel mesaj döner.
@@ -65,6 +68,7 @@ Brutalist tasarımlı, tam yığın (full-stack) e-ticaret mağazası. Next.js 1
 | Analytics | `@vercel/analytics` (pageview + özel event) |
 | SEO | Next metadata (OG/twitter/canonical), `sitemap.ts`/`robots.ts`, `next/og` (ImageResponse) |
 | Build analizi | `@next/bundle-analyzer` (`npm run analyze`) |
+| CI | GitHub Actions (`.github/workflows/ci.yml`) — lint, tip, build, test, audit |
 
 ## Kurulum
 
@@ -208,6 +212,10 @@ public/uploads/products/   # Admin görsel upload'ları (gitignore'lu)
 | GET | `/api/admin/users` · PATCH/DELETE `/[id]` | Kullanıcı arama/rol/silme (ADMIN, guard'lı) |
 | GET | `/api/admin/reviews` · DELETE `/[id]` | Yorum moderasyonu (ADMIN) |
 | POST | `/api/admin/upload` | Görsel yükleme (ADMIN; 5MB, mime whitelist) |
+
+## CI/CD
+
+`.github/workflows/ci.yml` — `main`/`master` push ve tüm PR'larda: `npm ci`, Prisma generate + `migrate deploy` (Postgres 16 + Redis 7 servisleri), TypeScript kontrolü, ESLint, production build, `npm test` ve `npm audit --omit=dev`. Deploy Vercel git entegrasyonuyla ayrıca yapılır.
 
 ## Test
 
