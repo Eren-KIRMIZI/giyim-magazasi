@@ -18,7 +18,7 @@ export default async function NewArrivalsSection() {
           </h2>
           <Link
             href="/koleksiyonlar"
-            className="font-label-mono text-label-mono uppercase text-on-surface hover:text-primary transition-colors"
+            className="link-sweep font-label-mono text-label-mono uppercase text-on-surface hover:text-primary transition-colors"
           >
             View All
           </Link>

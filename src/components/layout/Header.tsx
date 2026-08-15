@@ -16,6 +16,12 @@ const NAV_LINKS = [
   { label: "Newsletter", href: "/newsletter" },
 ];
 
+const ANNOUNCEMENT =
+  "The Final Drop — Free shipping over €100 · While objects last";
+
+const ICON_BTN =
+  "p-2 rounded-sm transition-all duration-200 hover:bg-surface-container hover:text-primary active:scale-95";
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -34,8 +40,13 @@ export default function Header() {
 
   return (
     <header className="relative">
-      <div className="bg-primary text-on-primary font-label-mono text-label-mono uppercase tracking-widest py-2 text-center px-margin-mobile">
-        The Final Drop — Free shipping over €100 &middot; While objects last
+      <div className="bg-primary text-on-primary font-label-mono text-label-mono uppercase tracking-widest py-2 overflow-hidden">
+        <div className="flex w-max whitespace-nowrap animate-[marquee_35s_linear_infinite] hover:[animation-play-state:paused]">
+          <span className="px-margin-mobile">{ANNOUNCEMENT} &nbsp;&middot;&nbsp;</span>
+          <span className="px-margin-mobile" aria-hidden="true">
+            {ANNOUNCEMENT} &nbsp;&middot;&nbsp;
+          </span>
+        </div>
       </div>
       <nav className="bg-surface/90 backdrop-blur-md w-full top-0 sticky z-50 border-b border-on-surface">
         <div className="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-2.5 max-w-container-max mx-auto">
@@ -70,11 +81,7 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-stack-sm text-primary">
-            <Link
-              href="/search"
-              aria-label="Search"
-              className="hover:text-on-surface transition-colors duration-150 p-2"
-            >
+            <Link href="/search" aria-label="Search" className={ICON_BTN}>
               <Icon name="search" className="w-6 h-6" />
             </Link>
             {status === "authenticated" ? (
@@ -97,7 +104,7 @@ export default function Header() {
                   type="button"
                   aria-label="Sign Out"
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  className="hover:text-on-surface transition-colors duration-150 p-2"
+                  className={ICON_BTN}
                   title="Çıkış"
                 >
                   <Icon name="logout" className="w-6 h-6" />
@@ -107,7 +114,7 @@ export default function Header() {
               <Link
                 href="/giris"
                 aria-label="Profile"
-                className="hover:text-on-surface transition-colors duration-150 p-2 hidden md:block"
+                className={`${ICON_BTN} hidden md:block`}
               >
                 <Icon name="person" className="w-6 h-6" />
               </Link>
@@ -115,7 +122,7 @@ export default function Header() {
             <Link
               href="/begendiklerim"
               aria-label="Wishlist"
-              className="relative hover:text-on-surface transition-colors duration-150 p-2 hidden md:block"
+              className={`${ICON_BTN} relative hidden md:block`}
             >
               <Icon name="favorite" className="w-6 h-6" />
               {wishlistCount > 0 && (
@@ -128,7 +135,7 @@ export default function Header() {
               href="/sepet"
               aria-label="Shopping Bag"
               id="cart-icon"
-              className="relative hover:text-on-surface transition-colors duration-150 p-2"
+              className={`${ICON_BTN} relative`}
             >
               <Icon name="shopping_bag" className="w-6 h-6" />
               {itemCount > 0 && (
@@ -139,7 +146,7 @@ export default function Header() {
             </Link>
             <button
               aria-label="Menu"
-              className="md:hidden hover:text-on-surface transition-colors duration-150 p-2"
+              className={`${ICON_BTN} md:hidden`}
               onClick={() => setMenuOpen((open) => !open)}
             >
               <Icon name={menuOpen ? "close" : "menu"} className="w-6 h-6" />
@@ -155,10 +162,10 @@ export default function Header() {
                   key={link.label}
                   href={link.href}
                   onClick={() => setMenuOpen(false)}
-                  className={`font-headline-md text-headline-md uppercase transition-colors ${
+                  className={`font-headline-md text-headline-md uppercase transition-all duration-200 ${
                     isActive(link.href)
-                      ? "text-primary"
-                      : "text-on-surface hover:text-primary"
+                      ? "text-primary pl-1"
+                      : "text-on-surface hover:text-primary hover:pl-2"
                   }`}
                 >
                   {link.label}

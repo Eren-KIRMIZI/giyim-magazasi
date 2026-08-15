@@ -62,9 +62,12 @@ export default function HeroSection() {
           <div data-hero-text className="flex gap-4">
             <Link
               href="/koleksiyonlar"
-              className="inline-block bg-on-surface text-surface font-headline-md text-headline-md uppercase px-8 py-4 hover:bg-primary transition-colors duration-200 hover:-translate-y-1 transform"
+              className="group inline-flex items-center gap-3 bg-on-surface text-surface font-headline-md text-headline-md uppercase px-8 py-4 hover:bg-primary transition-colors duration-200 hover:-translate-y-1 active:translate-y-0 transform will-change-transform"
             >
               Shop Now
+              <span className="transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1">
+                &#8599;
+              </span>
             </Link>
           </div>
         </div>

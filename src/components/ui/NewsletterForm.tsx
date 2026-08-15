@@ -98,7 +98,7 @@ export default function NewsletterForm({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="your@email.com"
-          className="w-full border border-on-surface bg-transparent px-4 py-3 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary"
+          className="w-full border border-on-surface bg-transparent px-4 py-3 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary transition-colors duration-200"
         />
       </div>
       {error && (
@@ -109,7 +109,7 @@ export default function NewsletterForm({
       <button
         type="submit"
         disabled={status === "loading"}
-        className="self-start bg-on-surface text-surface font-headline-md text-headline-md uppercase px-8 py-3 hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-60"
+        className="self-start bg-on-surface text-surface font-headline-md text-headline-md uppercase px-8 py-3 hover:bg-primary hover:text-on-primary hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-60"
       >
         {status === "loading" ? "Joining..." : "Subscribe"}
       </button>

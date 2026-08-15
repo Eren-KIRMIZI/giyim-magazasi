@@ -25,7 +25,7 @@ export default function Footer() {
             <Link
               key={link.label}
               href={link.href}
-              className="text-surface-variant dark:text-on-surface-variant hover:text-surface transition-colors duration-200 opacity-80 hover:opacity-100"
+              className="link-sweep text-surface-variant dark:text-on-surface-variant hover:text-surface transition-colors duration-200 opacity-80 hover:opacity-100"
             >
               {link.label}
             </Link>

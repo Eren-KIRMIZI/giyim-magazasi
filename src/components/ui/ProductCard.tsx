@@ -87,13 +87,15 @@ export default function ProductCard({
               imageAlt: product.images[0].alt,
               badge: product.badge,
             }}
-            className="w-9 h-9 text-on-surface hover:text-primary"
+            className="w-9 h-9 text-on-surface hover:text-primary hover:bg-surface active:scale-90"
           />
         </div>
         {!soldOut && (
-          <div className="absolute inset-x-0 bottom-0 bg-on-surface text-surface font-label-mono text-label-mono uppercase py-3 text-center flex items-center justify-center gap-2 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+          <div className="absolute inset-x-0 bottom-0 bg-on-surface text-surface font-label-mono text-label-mono uppercase py-3 text-center flex items-center justify-center gap-2 translate-y-full group-hover:translate-y-0 group-hover:bg-primary transition-all duration-300">
             View Object
-            <span className="text-[10px] leading-none">&#8599;</span>
+            <span className="text-[10px] leading-none transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+              &#8599;
+            </span>
           </div>
         )}
       </div>
@@ -133,7 +135,7 @@ export default function ProductCard({
               </span>
             </div>
           )}
-          <span className="bg-on-surface text-surface font-label-mono text-label-mono px-2 py-1 flex-shrink-0">
+          <span className="bg-on-surface text-surface font-label-mono text-label-mono px-2 py-1 flex-shrink-0 transition-colors duration-300 group-hover:bg-primary">
             {formatPrice(product.price)}
           </span>
         </div>
