@@ -24,6 +24,12 @@ export interface Product {
   category: string;
   categoryLabel: string;
   badge?: "NEW" | "LIMITED" | "SOLD OUT";
+  objectNumber?: string | null;
+  campaign?: string | null;
+  material?: string | null;
+  weight?: string | null;
+  fit?: string | null;
+  releaseDate?: string | null;
   colors?: ColorVariant[];
   sizes: string[];
   soldOutSizes?: string[];

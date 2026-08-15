@@ -51,6 +51,12 @@ export function mapProduct(p: DbProduct): Product {
     category: p.category.slug,
     categoryLabel: p.category.name,
     badge,
+    objectNumber: p.objectNumber,
+    campaign: p.campaign,
+    material: p.material,
+    weight: p.weight,
+    fit: p.fit,
+    releaseDate: p.releaseDate ? p.releaseDate.toISOString() : null,
     colors: colors.map((name) => ({
       name,
       hex: COLOR_HEX[name] ?? "#1b1c1c",

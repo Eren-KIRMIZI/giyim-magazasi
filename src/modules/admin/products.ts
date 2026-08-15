@@ -54,6 +54,12 @@ export interface ProductEditData {
   stock: number;
   status: string;
   badge: string | null;
+  objectNumber: string | null;
+  campaign: string | null;
+  material: string | null;
+  weight: string | null;
+  fit: string | null;
+  releaseDate: string | null;
   categoryId: string;
   images: { url: string; alt: string | null; position: number }[];
   variants: { size: string; color: string | null; stock: number }[];
@@ -79,6 +85,12 @@ export async function getProductForEdit(
     stock: product.stock,
     status: product.status,
     badge: product.badge,
+    objectNumber: product.objectNumber,
+    campaign: product.campaign,
+    material: product.material,
+    weight: product.weight,
+    fit: product.fit,
+    releaseDate: product.releaseDate ? product.releaseDate.toISOString() : null,
     categoryId: product.categoryId,
     images: product.images.map((img) => ({
       url: img.url,
@@ -184,6 +196,16 @@ function productDataFromBody(body: Record<string, unknown>, slug: string) {
     badge: ["NEW", "LIMITED", "SOLD OUT"].includes(String(body.badge))
       ? String(body.badge)
       : null,
+    objectNumber: String(body.objectNumber ?? "").trim() || null,
+    campaign: String(body.campaign ?? "").trim() || null,
+    material: String(body.material ?? "").trim() || null,
+    weight: String(body.weight ?? "").trim() || null,
+    fit: String(body.fit ?? "").trim() || null,
+    releaseDate: (() => {
+      const raw = String(body.releaseDate ?? "");
+      const d = new Date(raw);
+      return raw && !isNaN(d.getTime()) ? d.toISOString() : null;
+    })(),
   };
 }
 

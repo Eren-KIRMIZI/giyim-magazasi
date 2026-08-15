@@ -29,11 +29,11 @@ export default function NewsletterForm({
         body: JSON.stringify({ email }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Abonelik başarısız.");
+      if (!res.ok) throw new Error(data.error ?? "Subscription failed.");
       setSubscribed(true);
       setStatus("idle");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bir hata oluştu.");
+      setError(err instanceof Error ? err.message : "Something went wrong.");
       setStatus("error");
     }
   };
@@ -41,13 +41,13 @@ export default function NewsletterForm({
   if (subscribed) {
     return (
       <p
-        className={`font-label-mono text-label-mono uppercase ${
+        className={`font-label-mono text-label-mono uppercase tracking-widest ${
           tone === "on-dark"
             ? "text-primary-fixed-dim"
             : "text-primary"
         } ${className}`}
       >
-        Hoş geldin. Limited drop&apos;lardan ilk sen haberdar olacaksın.
+        Access granted — you&apos;re on the list.
       </p>
     );
   }
@@ -69,7 +69,7 @@ export default function NewsletterForm({
         <button
           type="submit"
           disabled={status === "loading"}
-          aria-label="Abone ol"
+          aria-label="Subscribe to newsletter"
           className="text-surface group-focus-within:text-primary transition-colors hover:translate-x-1 transform duration-300 disabled:opacity-60"
         >
           <span className="material-symbols-outlined text-lg">
@@ -90,7 +90,7 @@ export default function NewsletterForm({
           htmlFor="newsletter-email"
           className="font-label-mono text-label-mono uppercase text-on-surface-variant"
         >
-          E-posta adresin
+          Email address
         </label>
         <input
           id="newsletter-email"
@@ -98,7 +98,7 @@ export default function NewsletterForm({
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="ornek@lastdance.store"
+          placeholder="your@email.com"
           className="w-full border border-on-surface bg-transparent px-4 py-3 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary"
         />
       </div>
@@ -112,7 +112,7 @@ export default function NewsletterForm({
         disabled={status === "loading"}
         className="self-start bg-on-surface text-surface font-headline-md text-headline-md uppercase px-8 py-3 hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-60"
       >
-        {status === "loading" ? "Abone olunuyor..." : "Abone Ol"}
+        {status === "loading" ? "Joining..." : "Subscribe"}
       </button>
     </form>
   );

@@ -8,23 +8,30 @@ interface ProductCardProps {
   product: Product;
   variant?: "tile" | "card";
   className?: string;
+  index?: number;
 }
 
 export default function ProductCard({
   product,
   variant = "tile",
   className = "",
+  index,
 }: ProductCardProps) {
   const soldOut = product.badge === "SOLD OUT";
+  const hasAlternate = product.images.length > 1;
   const borderClasses =
     variant === "tile"
       ? "border-r border-b border-on-surface"
       : "border border-on-surface";
+  const objectNo =
+    index !== undefined
+      ? `No. ${String(index + 1).padStart(3, "0")}`
+      : null;
 
   return (
     <Link
       href={`/urunler/${product.slug}`}
-      className={`group h-full flex flex-col bg-surface hover:bg-surface-container transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${borderClasses} ${className}`}
+      className={`group h-full flex flex-col bg-surface hover:bg-surface-container transition-colors duration-300 ${borderClasses} ${className}`}
     >
       <div className="w-full aspect-[4/5] relative overflow-hidden bg-surface-container">
         <Image
@@ -32,8 +39,21 @@ export default function ProductCard({
           alt={product.images[0].alt}
           fill
           sizes="(max-width: 768px) 100vw, 33vw"
-          className="object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
+          className={`object-cover object-center transition-all duration-700 ease-out ${
+            hasAlternate
+              ? "group-hover:opacity-0 group-hover:scale-110"
+              : "group-hover:scale-105"
+          }`}
         />
+        {hasAlternate && (
+          <Image
+            src={product.images[1].src}
+            alt={product.images[1].alt}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover object-center opacity-0 scale-110 group-hover:opacity-100 group-hover:scale-100 transition-all duration-700 ease-out"
+          />
+        )}
         {product.badge && product.badge !== "SOLD OUT" && (
           <div
             className={`absolute top-4 left-4 font-label-mono text-label-mono px-2 py-1 ${
@@ -67,26 +87,53 @@ export default function ProductCard({
             className="w-9 h-9 text-on-surface hover:text-primary"
           />
         </div>
-      </div>
-      <div className="p-4 flex flex-col gap-2 relative">
-        <h3 className="font-label-mono text-label-mono uppercase text-on-surface tracking-widest">
-          {product.name}
-        </h3>
-        <div className="inline-block bg-on-surface text-surface font-label-mono text-label-mono px-2 py-1 self-start">
-          {formatPrice(product.price)}
-        </div>
-        {product.colors && product.colors.length > 0 && (
-          <div className="flex gap-2 mt-2">
-            {product.colors.map((color) => (
-              <span
-                key={color.name}
-                title={color.name}
-                className="w-4 h-4 rounded-full border border-outline"
-                style={{ backgroundColor: color.hex }}
-              />
-            ))}
+        {!soldOut && (
+          <div className="absolute inset-x-0 bottom-0 bg-on-surface text-surface font-label-mono text-label-mono uppercase py-3 text-center flex items-center justify-center gap-2 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            View Object
+            <span className="text-[10px] leading-none">&#8599;</span>
           </div>
         )}
+      </div>
+      <div className="p-4 flex flex-col gap-1.5 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          {product.categoryLabel ? (
+            <span className="font-label-mono text-label-mono uppercase tracking-widest text-on-surface-variant">
+              {product.categoryLabel}
+            </span>
+          ) : (
+            <span />
+          )}
+          {objectNo && (
+            <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
+              {objectNo}
+            </span>
+          )}
+        </div>
+        <h3 className="font-headline-md text-headline-md uppercase text-on-surface leading-tight mt-1">
+          {product.name}
+        </h3>
+        <div className="flex items-end justify-between gap-2 mt-auto pt-2">
+          {product.colors && product.colors.length > 0 && (
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex -space-x-1 flex-shrink-0">
+                {product.colors.map((color) => (
+                  <span
+                    key={color.name}
+                    title={color.name}
+                    className="w-4 h-4 rounded-full border border-outline"
+                    style={{ backgroundColor: color.hex }}
+                  />
+                ))}
+              </div>
+              <span className="font-label-mono text-label-mono uppercase text-on-surface-variant truncate">
+                {product.colors.map((c) => c.name).join(" · ")}
+              </span>
+            </div>
+          )}
+          <span className="bg-on-surface text-surface font-label-mono text-label-mono px-2 py-1 flex-shrink-0">
+            {formatPrice(product.price)}
+          </span>
+        </div>
       </div>
     </Link>
   );

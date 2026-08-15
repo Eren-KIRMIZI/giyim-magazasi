@@ -83,6 +83,12 @@ model Product {
   stock        Int         @default(0)
   status       String      @default("ACTIVE") // ACTIVE | DRAFT | SOLD_OUT
   badge        String? // NEW | LIMITED | SOLD OUT
+  objectNumber String? // editorial object number (LD-001)
+  campaign     String? // campaign name
+  material     String? // fabric spec
+  weight       String? // fabric weight spec
+  fit          String? // fit spec
+  releaseDate  DateTime? // official release date
   categoryId   String
   category     Category    @relation(fields: [categoryId], references: [id])
 

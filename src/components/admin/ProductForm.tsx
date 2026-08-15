@@ -32,6 +32,12 @@ export interface ProductFormInitial {
   stock: number;
   status: string;
   badge: string | null;
+  objectNumber: string | null;
+  campaign: string | null;
+  material: string | null;
+  weight: string | null;
+  fit: string | null;
+  releaseDate: string | null;
   categoryId: string;
   images: AdminImage[];
   variants: AdminVariant[];
@@ -62,6 +68,16 @@ export default function ProductForm({
   );
   const [status, setStatus] = useState(initial?.status ?? "ACTIVE");
   const [badge, setBadge] = useState(initial?.badge ?? "");
+  const [objectNumber, setObjectNumber] = useState(
+    initial?.objectNumber ?? ""
+  );
+  const [campaign, setCampaign] = useState(initial?.campaign ?? "");
+  const [material, setMaterial] = useState(initial?.material ?? "");
+  const [weight, setWeight] = useState(initial?.weight ?? "");
+  const [fit, setFit] = useState(initial?.fit ?? "");
+  const [releaseDate, setReleaseDate] = useState(
+    initial?.releaseDate ? initial.releaseDate.slice(0, 10) : ""
+  );
   const [categoryId, setCategoryId] = useState(
     initial?.categoryId ?? categories[0]?.id ?? ""
   );
@@ -124,6 +140,12 @@ export default function ProductForm({
       compareAtPrice: compareAtPrice !== "" ? Number(compareAtPrice) : null,
       status,
       badge: badge || null,
+      objectNumber: objectNumber || null,
+      campaign: campaign || null,
+      material: material || null,
+      weight: weight || null,
+      fit: fit || null,
+      releaseDate: releaseDate || null,
       categoryId,
       images: imagesText.split("\n").filter((l) => l.trim()),
       variants: variantsText.split("\n").filter((l) => l.trim()),
@@ -268,6 +290,74 @@ export default function ProductForm({
           </select>
         </div>
       </div>
+
+      <fieldset className="border border-on-surface p-4 flex flex-col gap-stack-md">
+        <legend className="font-label-mono text-label-mono uppercase text-on-surface-variant px-1">
+          Editorial (Object / Spec)
+        </legend>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="objectNumber" className={LABEL_CLASS}>Object No</label>
+            <input
+              id="objectNumber"
+              value={objectNumber}
+              onChange={(e) => setObjectNumber(e.target.value)}
+              placeholder="LD-001"
+              className={INPUT_CLASS}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="campaign" className={LABEL_CLASS}>Kampanya</label>
+            <input
+              id="campaign"
+              value={campaign}
+              onChange={(e) => setCampaign(e.target.value)}
+              placeholder="CAMPAIGN 001 — THE INDUSTRIAL COMPLEX"
+              className={INPUT_CLASS}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="material" className={LABEL_CLASS}>Kumaş</label>
+            <input
+              id="material"
+              value={material}
+              onChange={(e) => setMaterial(e.target.value)}
+              placeholder="600GSM organic cotton"
+              className={INPUT_CLASS}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="weight" className={LABEL_CLASS}>Ağırlık</label>
+            <input
+              id="weight"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              placeholder="600 GSM"
+              className={INPUT_CLASS}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="fit" className={LABEL_CLASS}>Kalıp</label>
+            <input
+              id="fit"
+              value={fit}
+              onChange={(e) => setFit(e.target.value)}
+              placeholder="Oversized — dropped shoulder"
+              className={INPUT_CLASS}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="releaseDate" className={LABEL_CLASS}>Çıkış Tarihi</label>
+            <input
+              id="releaseDate"
+              type="date"
+              value={releaseDate}
+              onChange={(e) => setReleaseDate(e.target.value)}
+              className={INPUT_CLASS}
+            />
+          </div>
+        </div>
+      </fieldset>
 
       <div className="flex flex-col gap-2">
         <label htmlFor="images" className={LABEL_CLASS}>

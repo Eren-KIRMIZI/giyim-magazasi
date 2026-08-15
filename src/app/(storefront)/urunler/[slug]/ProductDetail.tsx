@@ -52,6 +52,47 @@ export default function ProductDetail({
 
   const soldOut = product.badge === "SOLD OUT";
 
+  const totalStock = (product.variantStock ?? []).reduce(
+    (n, v) => n + v.stock,
+    0
+  );
+  const statusLabel =
+    totalStock <= 0
+      ? "ARCHIVED"
+      : product.badge === "LIMITED"
+        ? "LIMITED"
+        : "AVAILABLE";
+  const statusClasses =
+    statusLabel === "AVAILABLE"
+      ? "bg-primary text-on-primary"
+      : statusLabel === "LIMITED"
+        ? "bg-tertiary text-on-tertiary"
+        : "bg-secondary text-on-secondary";
+
+  const formatRelease = (iso: string): string | null => {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}.${m}.${day}`;
+  };
+
+  const colorNames = product.colors?.length
+    ? product.colors.map((c) => c.name).join(", ")
+    : null;
+  const specRows = [
+    { label: "Campaign", value: product.campaign ?? null },
+    { label: "Weight", value: product.weight ?? null },
+    { label: "Fabric", value: product.material ?? null },
+    { label: "Fit", value: product.fit ?? null },
+    {
+      label: "Release",
+      value: product.releaseDate ? formatRelease(product.releaseDate) : null,
+    },
+    { label: "Color", value: colorNames },
+  ].filter((r): r is { label: string; value: string } => Boolean(r.value));
+
   const stockFor = (size: string, color?: string | null): number | null => {
     const variants = product.variantStock;
     if (!variants) return null;
@@ -300,6 +341,41 @@ export default function ProductDetail({
           </div>
         </div>
       </div>
+
+      <section className="border border-on-surface">
+        <div className="bg-on-surface text-surface px-stack-md md:px-stack-lg py-stack-md flex flex-col md:flex-row md:items-center md:justify-between gap-stack-sm">
+          <div>
+            <p className="font-label-mono text-label-mono uppercase tracking-widest text-surface-variant mb-2">
+              Object
+            </p>
+            <p className="font-headline-md text-headline-md uppercase">
+              {product.objectNumber ? `No. ${product.objectNumber}` : "Object"} &mdash; {product.name}
+            </p>
+          </div>
+          <span
+            className={`font-label-mono text-label-mono uppercase px-3 py-1 self-start md:self-auto ${statusClasses}`}
+          >
+            {statusLabel}
+          </span>
+        </div>
+        {specRows.length > 0 && (
+          <dl className="divide-y divide-on-surface">
+            {specRows.map((row) => (
+              <div
+                key={row.label}
+                className="flex items-baseline justify-between gap-4 px-stack-md md:px-stack-lg py-3"
+              >
+                <dt className="font-label-mono text-label-mono uppercase tracking-widest text-on-surface-variant">
+                  {row.label}
+                </dt>
+                <dd className="font-body-md text-body-md uppercase text-on-surface text-right">
+                  {row.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </section>
 
       <ReviewsSection productId={product.id} />
 
