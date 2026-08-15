@@ -8,10 +8,12 @@ Brutalist tasarımlı, tam yığın (full-stack) e-ticaret mağazası. Next.js 1
 - **Anasayfa:** hero + yeni gelenler + koleksiyon bölümleri, GSAP/Lenis animasyonlu `Reveal`.
 - **Koleksiyonlar:** `/koleksiyonlar` — kategori, beden ve fiyat filtresi; mobilde toggle panel; "Recently Viewed" bölümü.
 - **Arama:** `/search` — server-side arama (`?q=&kategori=&beden=&renk=&fiyatmin=&fiyatmax=&stok=1&sirala=`), ILIKE tabanlı (isim/alt başlık/açıklama), sıralama: newest / price_asc / price_desc / popular (sipariş adedine göre). Filtreler URL'e yazılır (paylaşılabilir, SSR); `/search` noindex; `loading.tsx` iskelet ekranı. Header'daki arama ikonu buraya gider.
-- **Ürün detayı:** `/urunler/[slug]` (SSG, slug tabanlı) — görsel galeri, beden/renk seçimi, varyant bazlı **stok kontrolü** (seçili size+color'a göre; 0 stokta buton disabled + "Sold Out", ≤5 stokta "Son X adet" uyarısı), favori butonu, "Complete the Look" önerileri (**aynı kategori öncelikli**), yorumlar, mobilde **sticky add-to-cart barı**.
+- **Ürün detayı:** `/urunler/[slug]` (SSG, slug tabanlı) — görsel galeri, beden/renk seçimi, varyant bazlı **stok kontrolü** (seçili size+color'a göre; 0 stokta buton disabled + "Sold Out", ≤5 stokta "Son X adet" uyarısı), **Add to Bag + Buy Now** (sepete ekleyip `/sepet`'e yönlendirir), favori butonu, "Complete the Look" önerileri (**aynı kategori öncelikli**), yorumlar, mobilde **sticky add-to-cart barı**.
 - **Wishlist (favoriler):** `/begendiklerim` — Zustand + localStorage kalıcılığı; ürün kartlarında kalp, ürün detayında buton, Header'da rozetli kalp + mobil menü linki.
 - **Yakın zamanda bakılanlar:** localStorage'da tutulur (max 8), `/koleksiyonlar` altında listelenir.
 - **Sepet:** Zustand + localStorage; **adet üst sınırı stokla clamp'lenir** (varyant `maxQuantity`), girişli kullanıcılarda Redis senkronizasyonu.
+- **Newsletter:** `/newsletter` sayfası + `/api/newsletter` (e-posta doğrulama, IP bazlı rate limit 5/saat, `NewsletterSubscription` tablosuna upsert); anasayfa `CollectionsSection` içindeki form da aynı API'yi kullanır.
+- **Bilgi sayfaları:** `/shipping`, `/returns`, `/terms`, `/contact` — footer linkleri; özel **404** (`not-found.tsx`), hata (`error.tsx` + `retry`) ve kök hata (`global-error.tsx`) sayfaları.
 
 ### Kimlik, hesap ve sipariş
 - **Kimlik doğrulama:** kayıt + giriş (`/giris`), `bcryptjs` hash, rol (ADMIN/CUSTOMER) JWT session'da; Redis tabanlı rate limit (kayıt 10/15dk, yorum 10/saat, Redis yokken fail-open).
@@ -32,8 +34,8 @@ Brutalist tasarımlı, tam yığın (full-stack) e-ticaret mağazası. Next.js 1
 
 ### SEO / Büyüme (Phase 4)
 - **Metadata:** `metadataBase` + canonical/OG/twitter; ürün sayfası dinamik `generateMetadata`; home'da Organization, üründe **Product + BreadcrumbList JSON-LD**; `/search` ve kişisel sayfalar noindex.
-- **sitemap.xml** (statik + tüm ürünler, `updatedAt`) ve **robots.txt** (admin/hesap/sepet/favori/search/api gizli).
-- **Ürün OG görseli:** `opengraph-image` — `next/og` ImageResponse ile brutalist ürün kartı (ad, fiyat, kategori), `nodejs` runtime.
+- **sitemap.xml** (statik + bilgi sayfaları + tüm ürünler, `updatedAt`) ve **robots.txt** (admin/hesap/sepet/favori/search/api gizli).
+- **OG görselleri:** kök `opengraph-image` (brutalist anasayfa kartı) + ürün sayfası dinamik `opengraph-image` (ad, fiyat, kategori) — `next/og` ImageResponse, `nodejs` runtime.
 - **Analytics:** `@vercel/analytics` (`<Analytics/>` layout'ta); checkout başarısında `track("order_completed")` conversion event'i.
 - **lib/site.ts:** `SITE_URL` (`.env` → `NEXT_PUBLIC_SITE_URL`, yoksa `https://lastdance.store`).
 
@@ -127,9 +129,13 @@ app/
     auth/                # NextAuth handler + kayıt
     cart/sync/           # Redis sepet senkronizasyonu
     checkout/            # Stripe Checkout oturumu + stok rezervasyonu
+    newsletter/          # E-posta aboneliği (rate limit + upsert)
     reviews/             # Yorum listeleme/ekleme (rate limit)
     webhooks/stripe/     # Ödeme webhook'u (imza + idempotent)
+  not-found.tsx / error.tsx / global-error.tsx  # 404 + hata sınırları
+  opengraph-image.tsx    # Kök OG görseli (ImageResponse)
   begendiklerim/         # Wishlist sayfası (client)
+  newsletter/  shipping/  returns/  terms/  contact/   # Bilgi sayfaları
   giris/  hesabim/  sepet/  koleksiyonlar/  search/  urunler/[slug]/
   urunler/[slug]/opengraph-image.tsx    # Ürün OG görseli (ImageResponse)
 components/
@@ -169,6 +175,7 @@ public/uploads/products/ # Admin görsel upload'ları (gitignore'lu)
 - `OrderReservation` — checkout'ta rezerve edilen stok kaydı (ACTIVE → CONSUMED/RELEASED); webhook buradan siparişi kurar veya süresi dolunca stoku iade eder
 - `Cart` / `CartItem` — DB sepet şeması (aktif senkronizasyon Redis üzerinden)
 - `Review` — `productId+userId` benzersiz (kullanıcı ürün başına bir yorum)
+- `NewsletterSubscription` — abonelik e-postaları (`email` benzersiz, upsert)
 
 Ürün durumu: `ACTIVE` | `DRAFT` | `SOLD_OUT`; rozetler: `NEW` | `LIMITED` | `SOLD OUT` (toplam varyant stoku 0 olduğunda otomatik SOLD OUT). Sipariş durumu: `PENDING` | `PAID` | `SHIPPED` | `DELIVERED` | `CANCELLED` | `REFUNDED` | `FAILED`.
 
@@ -178,6 +185,7 @@ public/uploads/products/ # Admin görsel upload'ları (gitignore'lu)
 | --- | --- | --- |
 | GET/POST | `/api/cart/sync` | Redis sepetini oku/yaz (girişli) |
 | GET/POST | `/api/reviews` | Ürün yorumları; POST girişli + rate limit |
+| POST | `/api/newsletter` | E-posta aboneliği (doğrulama + rate limit 5/saat + upsert) |
 | POST | `/api/checkout` | Stripe Checkout oturumu + stok rezervasyonu |
 | POST | `/api/webhooks/stripe` | Webhook (imza doğrulamalı, idempotent) → Order/refund |
 | POST | `/api/auth/register` | Kayıt (rate limit) |

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCartStore } from "@/modules/cart";
 import { useRecentlyViewedStore } from "@/modules/catalog/client";
 import type { Product } from "@/modules/catalog";
@@ -31,8 +32,10 @@ export default function ProductDetail({
     product.colors?.[0]?.name ?? null
   );
   const [added, setAdded] = useState(false);
+  const [buying, setBuying] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const addRecentlyViewed = useRecentlyViewedStore((s) => s.add);
+  const router = useRouter();
 
   useEffect(() => {
     addRecentlyViewed({
@@ -90,6 +93,23 @@ export default function ProductDetail({
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+  };
+
+  const handleBuyNow = () => {
+    if (!activeSize || soldOut) return;
+    if (selectedStock === 0) return;
+    setBuying(true);
+    addItem({
+      productId: product.id,
+      slug: product.slug,
+      name: product.name,
+      price: product.price,
+      image: product.images[0].src,
+      size: activeSize,
+      color: activeColor ?? undefined,
+      maxQuantity: selectedStock ?? undefined,
+    });
+    router.push("/sepet");
   };
 
   return (
@@ -268,15 +288,15 @@ export default function ProductDetail({
             </div>
             <button
               type="button"
-              className="w-full border border-on-surface bg-transparent text-on-surface font-headline-md text-headline-md uppercase py-4 hover:bg-surface-variant transition-colors flex items-center justify-center gap-2"
+              onClick={handleBuyNow}
+              disabled={soldOut || !activeSize || selectedStock === 0 || buying}
+              className="w-full border border-on-surface bg-transparent text-on-surface font-headline-md text-headline-md uppercase py-4 hover:bg-surface-variant transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Mit <span className="font-bold text-primary">shop</span> kaufen
+              <span>{buying ? "Redirecting…" : "Buy Now"}</span>
+              <span className="material-symbols-outlined icon-fill text-[24px]">
+                {buying ? "progress_activity" : "flash_on"}
+              </span>
             </button>
-            <div className="text-center mt-2">
-              <a className="font-label-mono text-label-mono underline text-outline hover:text-on-surface cursor-pointer">
-                Weitere Bezahlmöglichkeiten
-              </a>
-            </div>
           </div>
         </div>
       </div>

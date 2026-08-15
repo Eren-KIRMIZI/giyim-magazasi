@@ -17,7 +17,7 @@ export default function Footer() {
             LAST DANCE
           </span>
           <span className="font-label-mono text-label-mono uppercase text-surface-variant dark:text-on-surface-variant">
-            © 2024 LAST DANCE. ALL RIGHTS RESERVED.
+            © {new Date().getFullYear()} LAST DANCE. ALL RIGHTS RESERVED.
           </span>
         </div>
         <div className="flex flex-wrap md:flex-nowrap gap-stack-md font-label-mono text-label-mono uppercase w-full md:w-auto mt-stack-md md:mt-0">
