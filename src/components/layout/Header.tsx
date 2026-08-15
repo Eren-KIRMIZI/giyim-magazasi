@@ -9,6 +9,7 @@ import { useCartStore } from "@/modules/cart";
 import { useWishlistStore } from "@/modules/wishlist";
 import { brandLogo } from "@/lib/data";
 import { Icon } from "@/components/icons";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const NAV_LINKS = [
   { label: "New Arrivals", href: "/#yeni-gelenler" },
@@ -144,6 +145,7 @@ export default function Header() {
                 </span>
               )}
             </Link>
+            <ThemeToggle />
             <button
               aria-label="Menu"
               className={`${ICON_BTN} md:hidden`}
@@ -189,6 +191,12 @@ export default function Header() {
                   Wishlist
                   {wishlistCount > 0 && ` (${wishlistCount})`}
                 </Link>
+              </div>
+              <div className="border-t border-on-surface pt-stack-sm mt-stack-sm flex items-center justify-between">
+                <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
+                  Theme
+                </span>
+                <ThemeToggle />
               </div>
             </div>
           </div>

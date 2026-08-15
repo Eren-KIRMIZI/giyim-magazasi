@@ -57,14 +57,14 @@ export default function CollectionsSection() {
             </Link>
           </Reveal>
           <Reveal className="flex-1" delay={0.1}>
-            <div className="bg-on-surface text-surface h-full p-stack-md flex flex-col justify-center border border-on-surface min-h-[250px]">
-              <p className="font-label-mono text-label-mono uppercase tracking-widest text-primary-fixed-dim mb-3">
+            <div className="bg-on-surface dark:bg-surface-container text-surface dark:text-on-surface h-full p-stack-md flex flex-col justify-center border border-on-surface min-h-[250px]">
+              <p className="font-label-mono text-label-mono uppercase tracking-widest text-primary-fixed-dim dark:text-primary mb-3">
                 Private Access — Limited Drops
               </p>
               <h4 className="font-headline-md text-headline-md uppercase mb-4">
                 Join the Syndicate
               </h4>
-              <p className="font-label-mono text-label-mono text-surface-variant mb-6">
+              <p className="font-label-mono text-label-mono text-surface-variant dark:text-on-surface-variant mb-6">
                 Get on the list. Drops close the moment they open.
               </p>
               <NewsletterForm tone="on-dark" />

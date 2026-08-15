@@ -17,7 +17,9 @@ type IconName =
   | "flash_on"
   | "progress_activity"
   | "star"
-  | "tune";
+  | "tune"
+  | "light_mode"
+  | "dark_mode";
 
 const FILLED_ICONS: IconName[] = ["favorite", "star", "flash_on", "check"];
 
@@ -87,6 +89,15 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M3 18h8" />
       <circle cx="15.5" cy="18" r="2.5" />
     </>
+  ),
+  light_mode: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+    </>
+  ),
+  dark_mode: (
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
   ),
 };
 

@@ -57,7 +57,7 @@ export default function NewsletterForm({
     return (
       <form
         onSubmit={handleSubmit}
-        className={`flex w-full border-b border-surface pb-2 group focus-within:border-primary transition-colors ${className}`}
+        className={`flex w-full border-b border-surface dark:border-on-surface pb-2 group focus-within:border-primary transition-colors ${className}`}
       >
         <input
           type="email"
@@ -65,13 +65,13 @@ export default function NewsletterForm({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="EMAIL ADDRESS"
-          className="bg-transparent w-full font-label-mono text-label-mono text-surface placeholder:text-surface-variant focus:outline-none focus:ring-0 border-none p-0 transition-all duration-300"
+          className="bg-transparent w-full font-label-mono text-label-mono text-surface dark:text-on-surface placeholder:text-surface-variant dark:placeholder:text-on-surface-variant focus:outline-none focus:ring-0 border-none p-0 transition-all duration-300"
         />
         <button
           type="submit"
           disabled={status === "loading"}
           aria-label="Subscribe to newsletter"
-          className="text-surface group-focus-within:text-primary transition-colors hover:translate-x-1 transform duration-300 disabled:opacity-60"
+          className="text-surface dark:text-on-surface group-focus-within:text-primary transition-colors hover:translate-x-1 transform duration-300 disabled:opacity-60"
         >
           <Icon name="arrow_forward" className="w-[18px] h-[18px]" />
         </button>

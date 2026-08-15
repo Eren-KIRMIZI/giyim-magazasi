@@ -52,6 +52,11 @@ export default function RootLayout({
       className={`${geist.variable} ${anton.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="bg-surface text-on-surface font-body-md min-h-screen flex flex-col">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem("last-dance-theme");var d=s? s==="dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;if(d)document.documentElement.classList.add("dark")}catch(e){}})();`,
+          }}
+        />
         <AuthProvider>
           <ScrollProvider>
             <Header />
