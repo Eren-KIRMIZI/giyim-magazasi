@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ui/ProductCard";
+import { Icon } from "@/components/icons";
 import type { Product } from "@/modules/catalog";
 import { buildSearchUrl, type SearchQueryState } from "./searchParams";
 
@@ -224,7 +225,7 @@ export default function SearchClient({
             >
               Filters
               {activeFilterCount > 0 && ` (${activeFilterCount})`}
-              <span className="material-symbols-outlined text-sm">tune</span>
+              <Icon name="tune" className="w-4 h-4" />
             </button>
           </div>
 

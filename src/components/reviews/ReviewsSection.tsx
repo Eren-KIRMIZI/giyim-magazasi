@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useSession } from "next-auth/react";
+import { Icon } from "@/components/icons";
 
 interface Review {
   id: string;
@@ -15,14 +16,12 @@ function Stars({ rating }: { rating: number }) {
   return (
     <span className="flex gap-0.5 text-primary" aria-label={`${rating} / 5`}>
       {[1, 2, 3, 4, 5].map((n) => (
-        <span
+        <Icon
           key={n}
-          className={`material-symbols-outlined icon-fill text-[16px] ${
-            n <= rating ? "" : "text-outline opacity-30"
-          }`}
-        >
-          star
-        </span>
+          name="star"
+          className={`w-4 h-4 ${n <= rating ? "" : "text-outline opacity-30"}`}
+          filled
+        />
       ))}
     </span>
   );
@@ -158,14 +157,18 @@ export default function ReviewsSection({ productId }: { productId: string }) {
                 onMouseEnter={() => setHoverRating(n)}
                 onMouseLeave={() => setHoverRating(0)}
                 onClick={() => setRating(n)}
-                className={`material-symbols-outlined icon-fill text-[28px] transition-colors ${
-                  n <= (hoverRating || rating)
-                    ? "text-primary"
-                    : "text-outline opacity-30"
-                }`}
                 aria-label={`${n} yıldız`}
+                className="cursor-pointer transition-colors"
               >
-                star
+                <Icon
+                  name="star"
+                  filled
+                  className={`w-7 h-7 transition-colors ${
+                    n <= (hoverRating || rating)
+                      ? "text-primary"
+                      : "text-outline opacity-30"
+                  }`}
+                />
               </button>
             ))}
           </div>

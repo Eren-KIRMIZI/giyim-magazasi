@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import gsap from "gsap";
 import { heroImage } from "@/lib/data";
 
@@ -9,6 +10,10 @@ export default function HeroSection() {
   const rootRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
     const ctx = gsap.context(() => {
       gsap.fromTo(
         "[data-hero-img]",
@@ -66,12 +71,15 @@ export default function HeroSection() {
         <div
           data-hero-img
           className="col-span-1 md:col-span-7 bg-surface-container relative overflow-hidden min-h-[50vh] md:min-h-full"
-          style={{
-            backgroundImage: `url(${heroImage})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
         >
+          <Image
+            src={heroImage}
+            alt="LAST DANCE Campaign 001 — The Final Drop"
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 58vw"
+            className="object-cover object-center"
+          />
           <div className="absolute bottom-stack-md right-stack-md bg-on-surface text-surface font-label-mono text-label-mono px-3 py-1 uppercase">
             Campaign 001
           </div>

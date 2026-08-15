@@ -1,10 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
 
 interface RevealProps {
   children: React.ReactNode;
@@ -27,30 +23,38 @@ export default function Reveal({
     const el = ref.current;
     if (!el) return;
 
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        el,
-        { opacity: 0, y },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out",
-          delay,
-          scrollTrigger: {
-            trigger: el,
-            start: "top 85%",
-            once,
-          },
-        }
-      );
-    }, el);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
 
-    return () => ctx.revert();
+    el.style.opacity = "0";
+    el.style.transform = `translateY(${y}px)`;
+    el.style.transitionDelay = `${delay}ms`;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            el.classList.add("revealed");
+            if (once) {
+              observer.disconnect();
+            } else {
+              observer.unobserve(el);
+            }
+          } else if (!once) {
+            el.classList.remove("revealed");
+          }
+        }
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -12% 0px" }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [delay, y, once]);
 
   return (
-    <div ref={ref} className={className}>
+    <div ref={ref} className={`reveal ${className}`}>
       {children}
     </div>
   );

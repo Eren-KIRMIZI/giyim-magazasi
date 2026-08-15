@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import ProductCard from "@/components/ui/ProductCard";
 import RecentlyViewedSection from "@/components/ui/RecentlyViewedSection";
+import { Icon } from "@/components/icons";
 import type { Product } from "@/modules/catalog";
 
 const SIZES = ["S", "M", "L", "XL"];
@@ -231,7 +232,7 @@ export default function CollectionsClient({ products }: { products: Product[] })
               className="flex items-center gap-1 font-label-mono text-label-mono uppercase border border-on-surface px-3 py-1"
             >
               Filters
-              <span className="material-symbols-outlined text-sm">tune</span>
+              <Icon name="tune" className="w-4 h-4" />
             </button>
           </div>
 

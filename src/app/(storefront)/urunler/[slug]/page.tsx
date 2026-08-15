@@ -8,6 +8,8 @@ import {
 import { SITE_URL } from "@/lib/site";
 import ProductDetail from "./ProductDetail";
 
+export const revalidate = 300;
+
 export async function generateStaticParams() {
   const slugs = await getAllSlugs();
   return slugs.map((slug) => ({ slug }));

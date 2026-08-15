@@ -20,7 +20,7 @@ async function main() {
       where: { slug: p.slug },
       update: {
         name: p.name,
-        description: p.description,
+        description: p.description ?? "",
         subtitle: p.subtitle,
         price: p.price,
         status: p.badge === "SOLD OUT" ? "SOLD_OUT" : "ACTIVE",
@@ -35,7 +35,7 @@ async function main() {
       create: {
         slug: p.slug,
         name: p.name,
-        description: p.description,
+        description: p.description ?? "",
         subtitle: p.subtitle,
         price: p.price,
         stock: 0,

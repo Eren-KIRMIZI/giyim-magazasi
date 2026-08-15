@@ -8,6 +8,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/modules/cart";
 import { useWishlistStore } from "@/modules/wishlist";
 import { brandLogo } from "@/lib/data";
+import { Icon } from "@/components/icons";
 
 const NAV_LINKS = [
   { label: "New Arrivals", href: "/#yeni-gelenler" },
@@ -74,7 +75,7 @@ export default function Header() {
               aria-label="Search"
               className="hover:text-on-surface transition-colors duration-150 p-2"
             >
-              <span className="material-symbols-outlined">search</span>
+              <Icon name="search" className="w-6 h-6" />
             </Link>
             {status === "authenticated" ? (
               <div className="hidden md:flex items-center gap-stack-sm">
@@ -99,7 +100,7 @@ export default function Header() {
                   className="hover:text-on-surface transition-colors duration-150 p-2"
                   title="Çıkış"
                 >
-                  <span className="material-symbols-outlined">logout</span>
+                  <Icon name="logout" className="w-6 h-6" />
                 </button>
               </div>
             ) : (
@@ -108,7 +109,7 @@ export default function Header() {
                 aria-label="Profile"
                 className="hover:text-on-surface transition-colors duration-150 p-2 hidden md:block"
               >
-                <span className="material-symbols-outlined">person</span>
+                <Icon name="person" className="w-6 h-6" />
               </Link>
             )}
             <Link
@@ -116,7 +117,7 @@ export default function Header() {
               aria-label="Wishlist"
               className="relative hover:text-on-surface transition-colors duration-150 p-2 hidden md:block"
             >
-              <span className="material-symbols-outlined">favorite</span>
+              <Icon name="favorite" className="w-6 h-6" />
               {wishlistCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 bg-primary text-on-primary font-label-mono text-label-mono px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
                   {wishlistCount}
@@ -129,7 +130,7 @@ export default function Header() {
               id="cart-icon"
               className="relative hover:text-on-surface transition-colors duration-150 p-2"
             >
-              <span className="material-symbols-outlined">shopping_bag</span>
+              <Icon name="shopping_bag" className="w-6 h-6" />
               {itemCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 bg-primary text-on-primary font-label-mono text-label-mono px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
                   {itemCount}
@@ -141,7 +142,7 @@ export default function Header() {
               className="md:hidden hover:text-on-surface transition-colors duration-150 p-2"
               onClick={() => setMenuOpen((open) => !open)}
             >
-              <span className="material-symbols-outlined">{menuOpen ? "close" : "menu"}</span>
+              <Icon name={menuOpen ? "close" : "menu"} className="w-6 h-6" />
             </button>
           </div>
         </div>
@@ -169,7 +170,7 @@ export default function Header() {
                   onClick={() => setMenuOpen(false)}
                   className="font-headline-md text-headline-md uppercase text-on-surface hover:text-primary transition-colors flex items-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-[22px]">search</span>
+                  <Icon name="search" className="w-[22px] h-[22px]" />
                   Search
                 </Link>
                 <Link
@@ -177,7 +178,7 @@ export default function Header() {
                   onClick={() => setMenuOpen(false)}
                   className="font-headline-md text-headline-md uppercase text-on-surface hover:text-primary transition-colors flex items-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-[22px]">favorite</span>
+                  <Icon name="favorite" className="w-[22px] h-[22px]" />
                   Wishlist
                   {wishlistCount > 0 && ` (${wishlistCount})`}
                 </Link>

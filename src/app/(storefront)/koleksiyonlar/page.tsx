@@ -3,6 +3,8 @@ import CollectionsClient from "./CollectionsClient";
 import { getAllProducts } from "@/modules/catalog";
 import { SITE_URL } from "@/lib/site";
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Collections",
   description:

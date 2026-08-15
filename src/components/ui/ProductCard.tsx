@@ -11,6 +11,8 @@ interface ProductCardProps {
   index?: number;
 }
 
+const IMAGE_SIZES = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw";
+
 export default function ProductCard({
   product,
   variant = "tile",
@@ -38,7 +40,7 @@ export default function ProductCard({
           src={product.images[0].src}
           alt={product.images[0].alt}
           fill
-          sizes="(max-width: 768px) 100vw, 33vw"
+          sizes={IMAGE_SIZES}
           className={`object-cover object-center transition-all duration-700 ease-out ${
             hasAlternate
               ? "group-hover:opacity-0 group-hover:scale-110"
@@ -50,7 +52,8 @@ export default function ProductCard({
             src={product.images[1].src}
             alt={product.images[1].alt}
             fill
-            sizes="(max-width: 768px) 100vw, 33vw"
+            loading="lazy"
+            sizes={IMAGE_SIZES}
             className="object-cover object-center opacity-0 scale-110 group-hover:opacity-100 group-hover:scale-100 transition-all duration-700 ease-out"
           />
         )}

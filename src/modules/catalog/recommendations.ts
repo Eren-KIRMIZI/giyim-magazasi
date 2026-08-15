@@ -1,7 +1,7 @@
 import "server-only";
 import { prisma } from "@/infrastructure/prisma";
 import type { Product } from "./types";
-import { mapProduct, type DbProduct } from "./queries";
+import { getCardProducts } from "./queries";
 
 export async function getRecommendedProducts(
   excludeSlug: string,
@@ -12,40 +12,30 @@ export async function getRecommendedProducts(
     select: { categoryId: true },
   });
 
-  const include = {
-    category: true,
-    images: { orderBy: { position: "asc" } },
-    variants: true,
-  } as const;
-
-  const rows: DbProduct[] = [];
+  const products: Product[] = [];
   if (current) {
-    rows.push(
-      ...(await prisma.product.findMany({
-        where: {
+    products.push(
+      ...(await getCardProducts(
+        {
           status: { not: "DRAFT" },
           categoryId: current.categoryId,
           slug: { not: excludeSlug },
         },
-        include,
-        orderBy: { createdAt: "desc" },
-        take: limit,
-      }))
+        { take: limit }
+      ))
     );
   }
-  if (rows.length < limit) {
-    rows.push(
-      ...(await prisma.product.findMany({
-        where: {
+  if (products.length < limit) {
+    products.push(
+      ...(await getCardProducts(
+        {
           status: { not: "DRAFT" },
           slug: { not: excludeSlug },
-          id: { notIn: rows.map((r) => r.id) },
+          id: { notIn: products.map((p) => p.id) },
         },
-        include,
-        orderBy: { createdAt: "desc" },
-        take: limit - rows.length,
-      }))
+        { take: limit - products.length }
+      ))
     );
   }
-  return rows.map(mapProduct);
+  return products;
 }

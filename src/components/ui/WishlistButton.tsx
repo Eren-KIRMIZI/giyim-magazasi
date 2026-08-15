@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useWishlistStore, type WishlistItem } from "@/modules/wishlist";
+import { Icon } from "@/components/icons";
 
 interface WishlistButtonProps {
   item: WishlistItem;
@@ -40,17 +41,17 @@ export default function WishlistButton({
       onClick={handleToggle}
       className={`flex items-center justify-center transition-colors cursor-pointer ${className}`}
     >
-      <span
-        className={`material-symbols-outlined text-[24px] transition-all ${
+      <Icon
+        name="favorite"
+        className={`w-6 h-6 transition-all ${
           has
-            ? "icon-fill text-primary animate-pop"
+            ? "text-primary animate-pop"
             : popping
               ? "animate-pop"
               : ""
         }`}
-      >
-        favorite
-      </span>
+        filled={has}
+      />
       {label ? (
         <span className="font-label-mono text-label-mono uppercase">
           {has ? "Favorilerde" : label}

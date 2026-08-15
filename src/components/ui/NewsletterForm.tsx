@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Icon } from "@/components/icons";
 
 type Tone = "on-dark" | "on-light";
 type Status = "idle" | "loading" | "error";
@@ -72,9 +73,7 @@ export default function NewsletterForm({
           aria-label="Subscribe to newsletter"
           className="text-surface group-focus-within:text-primary transition-colors hover:translate-x-1 transform duration-300 disabled:opacity-60"
         >
-          <span className="material-symbols-outlined text-lg">
-            arrow_forward
-          </span>
+          <Icon name="arrow_forward" className="w-[18px] h-[18px]" />
         </button>
       </form>
     );

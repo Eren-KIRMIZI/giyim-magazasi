@@ -1,4 +1,5 @@
 import { prisma } from "@/infrastructure/prisma";
+import { revalidatePath } from "next/cache";
 import { slugify } from "@/lib/utils";
 
 export interface AdminProductRow {
@@ -10,6 +11,12 @@ export interface AdminProductRow {
   badge: string | null;
   category: string;
   image: string | null;
+}
+
+function invalidateProductCaches(slug?: string) {
+  revalidatePath("/");
+  revalidatePath("/koleksiyonlar");
+  if (slug) revalidatePath(`/urunler/${slug}`);
 }
 
 export async function getAdminProducts(): Promise<AdminProductRow[]> {
@@ -241,7 +248,7 @@ export async function createProduct(body: Record<string, unknown>) {
   );
   const base = productDataFromBody(body, slug);
 
-  return prisma.product.create({
+  const created = await prisma.product.create({
     data: {
       ...base,
       stock: variants.length
@@ -266,6 +273,9 @@ export async function createProduct(body: Record<string, unknown>) {
     },
     include: { category: true, images: true, variants: true },
   });
+
+  invalidateProductCaches(created.slug);
+  return created;
 }
 
 export async function updateProduct(id: string, body: Record<string, unknown>) {
@@ -306,7 +316,7 @@ export async function updateProduct(id: string, body: Record<string, unknown>) {
   );
   const base = productDataFromBody(body, slug);
 
-  return prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx) => {
     await tx.productImage.deleteMany({ where: { productId: id } });
     await tx.productVariant.deleteMany({ where: { productId: id } });
 
@@ -340,6 +350,9 @@ export async function updateProduct(id: string, body: Record<string, unknown>) {
       include: { category: true, images: true, variants: true },
     });
   });
+
+  invalidateProductCaches(updated.slug);
+  return updated;
 }
 
 export async function deleteProduct(id: string) {
@@ -357,4 +370,5 @@ export async function deleteProduct(id: string) {
   }
 
   await prisma.product.delete({ where: { id } });
+  invalidateProductCaches(product.slug);
 }

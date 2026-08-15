@@ -11,6 +11,7 @@ import { flyToCart } from "@/lib/flyToCart";
 import ProductCard from "@/components/ui/ProductCard";
 import WishlistButton from "@/components/ui/WishlistButton";
 import ReviewsSection from "@/components/reviews/ReviewsSection";
+import { Icon } from "@/components/icons";
 
 interface ProductDetailProps {
   product: Product;
@@ -309,9 +310,11 @@ export default function ProductDetail({
                       ? "Sold Out"
                       : "Add to Bag"}
                 </span>
-                <span className="material-symbols-outlined icon-fill text-[24px]">
-                  {added ? "check" : "shopping_bag"}
-                </span>
+                <Icon
+                  name={added ? "check" : "shopping_bag"}
+                  className="w-6 h-6"
+                  filled={added}
+                />
               </button>
               <WishlistButton
                 item={{
@@ -334,9 +337,11 @@ export default function ProductDetail({
               className="w-full border border-on-surface bg-transparent text-on-surface font-headline-md text-headline-md uppercase py-4 hover:bg-surface-variant transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>{buying ? "Redirecting…" : "Buy Now"}</span>
-              <span className="material-symbols-outlined icon-fill text-[24px]">
-                {buying ? "progress_activity" : "flash_on"}
-              </span>
+              <Icon
+                name={buying ? "progress_activity" : "flash_on"}
+                className="w-6 h-6"
+                filled={!buying}
+              />
             </button>
           </div>
         </div>
@@ -419,9 +424,11 @@ export default function ProductDetail({
                 ? "Sold Out"
                 : "Add to Bag"}
           </span>
-          <span className="material-symbols-outlined icon-fill text-[24px]">
-            {added ? "check" : "shopping_bag"}
-          </span>
+          <Icon
+            name={added ? "check" : "shopping_bag"}
+            className="w-6 h-6"
+            filled={added}
+          />
         </button>
         <WishlistButton
           item={{

@@ -19,7 +19,7 @@ export interface Product {
   slug: string;
   name: string;
   subtitle: string;
-  description: string;
+  description?: string;
   price: number;
   category: string;
   categoryLabel: string;
