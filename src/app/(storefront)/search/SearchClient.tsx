@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ui/ProductCard";
+import EmptyState from "@/components/ui/EmptyState";
 import { Icon } from "@/components/icons";
 import type { Product } from "@/modules/catalog";
 import { buildSearchUrl, type SearchQueryState } from "./searchParams";
@@ -328,18 +329,13 @@ export default function SearchClient({
               ))}
             </div>
           ) : (
-            <div className="py-stack-lg text-center">
-              <p className="font-headline-md text-headline-md uppercase text-on-surface-variant mb-4">
-                No products found
-              </p>
-              <button
-                type="button"
-                onClick={clearAll}
-                className="font-label-mono text-label-mono uppercase border border-on-surface px-6 py-2 hover:bg-on-surface hover:text-surface transition-colors"
-              >
-                Clear Search
-              </button>
-            </div>
+            <EmptyState
+              icon="search"
+              title="No products found"
+              description="Try a different keyword or clear your active filters."
+              actionLabel="Clear Search"
+              onAction={clearAll}
+            />
           )}
         </section>
       </div>
