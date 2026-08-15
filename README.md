@@ -1,19 +1,22 @@
 # LAST DANCE — Giyim Mağazası
 
-Brutalist tasarımlı, tam yığın (full-stack) e-ticaret mağazası. Next.js 16 App Router, TypeScript, Tailwind CSS v4 üzerine kurulu; PostgreSQL (Prisma), Redis (Memurai/Upstash), Auth.js (NextAuth v5), Stripe ve Vercel Analytics entegrasyonlu.
+Brutalist tasarımlı, tam yığın (full-stack) e-ticaret mağazası. Next.js 16 App Router, TypeScript, Tailwind CSS v4 üzerine kurulu; PostgreSQL (Prisma 7), Redis (Memurai/Upstash), Auth.js (NextAuth v5), Stripe ve Vercel Analytics entegrasyonlu.
 
 ## Özellikler
 
 ### Vitrin
-- **Anasayfa:** hero + yeni gelenler + koleksiyon bölümleri, GSAP/Lenis animasyonlu `Reveal`.
-- **Koleksiyonlar:** `/koleksiyonlar` — kategori, beden ve fiyat filtresi; mobilde toggle panel; "Recently Viewed" bölümü.
+- **Anasayfa:** hero + yeni gelenler + koleksiyon bölümleri; `Reveal` bileşeni **IntersectionObserver + CSS transition** ile çalışır (`prefers-reduced-motion` destekli); `template.tsx` **GSAP sayfa geçiş animasyonu** (reduced-motion'da kapalı).
+- **Header:** üst duyuru bandı ("The Final Drop — Free shipping over €100"), sticky + `backdrop-blur` navigasyon, aktif link alt çizgisi, gerçek nav linkleri (New Arrivals / Collections / Newsletter), arama-wishlist-sepet ikonları (inline SVG), sepet/favori rozetleri, mobil menü.
+- **Ürün kartı (editorial redesign):** ürün sırasına göre **"No. 001"** etiketi, ürün **renk numuneleri (swatches)**, hover'da "View Object" + ikinci görsele geçiş, favori kalbi.
+- **Koleksiyonlar:** `/koleksiyonlar` — kategori, beden ve fiyat filtresi; mobilde toggle panel; "Recently Viewed" bölümü; üstte **kampanya bandı** ("Archive // Campaign 001 — The Final Drop").
 - **Arama:** `/search` — server-side arama (`?q=&kategori=&beden=&renk=&fiyatmin=&fiyatmax=&stok=1&sirala=`), ILIKE tabanlı (isim/alt başlık/açıklama), sıralama: newest / price_asc / price_desc / popular (sipariş adedine göre). Filtreler URL'e yazılır (paylaşılabilir, SSR); `/search` noindex; `loading.tsx` iskelet ekranı. Header'daki arama ikonu buraya gider.
-- **Ürün detayı:** `/urunler/[slug]` (SSG, slug tabanlı) — görsel galeri, beden/renk seçimi, varyant bazlı **stok kontrolü** (seçili size+color'a göre; 0 stokta buton disabled + "Sold Out", ≤5 stokta "Son X adet" uyarısı), **Add to Bag + Buy Now** (sepete ekleyip `/sepet`'e yönlendirir), favori butonu, "Complete the Look" önerileri (**aynı kategori öncelikli**), yorumlar, mobilde **sticky add-to-cart barı**.
+- **Ürün detayı:** `/urunler/[slug]` (SSG, slug tabanlı) — görsel galeri, beden/renk seçimi, varyant bazlı **stok kontrolü** (seçili size+color'a göre; 0 stokta buton disabled + "Sold Out", ≤5 stokta "Son X adet" uyarısı), **Add to Bag + Buy Now** (sepete ekleyip `/sepet`'e yönlendirir), favori butonu, "Complete the Look" önerileri (**aynı kategori öncelikli**), yorumlar, mobilde **sticky add-to-cart barı**. **Editorial bölüm:** `OBJECT / STATUS / SPEC` — object number, kampanya, kumaş/materyal, gramaj, kalıp ve çıkış tarihi (DB'den).
 - **Wishlist (favoriler):** `/begendiklerim` — Zustand + localStorage kalıcılığı; ürün kartlarında kalp, ürün detayında buton, Header'da rozetli kalp + mobil menü linki.
 - **Yakın zamanda bakılanlar:** localStorage'da tutulur (max 8), `/koleksiyonlar` altında listelenir.
 - **Sepet:** Zustand + localStorage; **adet üst sınırı stokla clamp'lenir** (varyant `maxQuantity`), girişli kullanıcılarda Redis senkronizasyonu.
-- **Newsletter:** `/newsletter` sayfası + `/api/newsletter` (e-posta doğrulama, IP bazlı rate limit 5/saat, `NewsletterSubscription` tablosuna upsert); anasayfa `CollectionsSection` içindeki form da aynı API'yi kullanır.
+- **Newsletter:** `/newsletter` sayfası + `/api/newsletter` (e-posta doğrulama, IP bazlı rate limit 5/saat, `NewsletterSubscription` tablosuna upsert, "ACCESS GRANTED" onayı); anasayfa `CollectionsSection` içindeki form da aynı API'yi kullanır.
 - **Bilgi sayfaları:** `/shipping`, `/returns`, `/terms`, `/contact` — footer linkleri; özel **404** (`not-found.tsx`), hata (`error.tsx` + `retry`) ve kök hata (`global-error.tsx`) sayfaları.
+- **İkonlar:** `components/icons.tsx` — tüm ikonlar **inline SVG** (Material Symbols bağımlılığı yok).
 
 ### Kimlik, hesap ve sipariş
 - **Kimlik doğrulama:** kayıt + giriş (`/giris`), `bcryptjs` hash, rol (ADMIN/CUSTOMER) JWT session'da; Redis tabanlı rate limit (kayıt 10/15dk, yorum 10/saat, Redis yokken fail-open).
@@ -23,13 +26,13 @@ Brutalist tasarımlı, tam yığın (full-stack) e-ticaret mağazası. Next.js 1
   - `checkout.session.completed` → Order + kalem snapshot'ları (isim/fiyat/SKU/görsel/beden/renk) oluşturur, rezervasyonu CONSUMED yapar.
   - `expired` / `async_payment_failed` → stok iade + CANCELLED/FAILED kaydı.
   - `charge.refunded` → stok geri + REFUNDED (`stockRestored` ile tek sefer).
-  - Sipariş numarası: `LD-2026-XXXXXX`. Ürün sonradan silinse/silinse de sipariş kalemleri ayakta kalır.
+  - Sipariş numarası: `LD-2026-XXXXXX`. Ürün sonradan silinse bile sipariş kalemleri ayakta kalır.
 
 ### Admin paneli (`/admin`, sadece ADMIN)
 - **Dashboard:** ürün/sipariş/kullanıcı/kategori sayaçları; toplam + son 30 gün ciro; son 24 saat iptal/fail; aktif rezervasyon; **30 günlük günlük ciro SVG grafiği** (bağımlılıksız); en çok satanlar (adet + ciro); **düşük stok uyarıları (≤5)**; son siparişler.
-- **Ürünler:** CRUD (`/admin/urunler`, oluştur/düzenle), **görsel yükleme** (`/api/admin/upload` — 5MB, jpeg/png/webp/gif/avif; `public/uploads/products/<ts>-<hex>.<ext>`), varyant stok satırları.
+- **Ürünler:** CRUD (`/admin/urunler`, oluştur/düzenle) — artı **editorial alanlar** (Object No, Kampanya, Materyal, Gramaj, Kalıp, Çıkış Tarihi), **görsel yükleme** (`/api/admin/upload` — 5MB, jpeg/png/webp/gif/avif; `public/uploads/products/<ts>-<hex>.<ext>`), varyant stok satırları.
 - **Kategoriler:** CRUD (`/admin/kategoriler`); ürünü olan kategori silinemez (409).
-- **Kullanıcılar:** `/admin/kullanicilar` — arama, rol değiştirme, silme (koruma: kendini/ son admin'i düşüremez, kendini silemez, sipariş/yorum/sepeti olan kullanıcı silinemez).
+- **Kullanıcılar:** `/admin/kullanicilar` — arama, rol değiştirme, silme (koruma: kendini/son admin'i düşüremez, kendini silemez, sipariş/yorum/sepeti olan kullanıcı silinemez).
 - **Yorumlar:** `/admin/yorumlar` — ürün adıyla arama + silme (moderasyon).
 
 ### SEO / Büyüme (Phase 4)
@@ -39,20 +42,28 @@ Brutalist tasarımlı, tam yığın (full-stack) e-ticaret mağazası. Next.js 1
 - **Analytics:** `@vercel/analytics` (`<Analytics/>` layout'ta); checkout başarısında `track("order_completed")` conversion event'i.
 - **lib/site.ts:** `SITE_URL` (`.env` → `NEXT_PUBLIC_SITE_URL`, yoksa `https://lastdance.store`).
 
+### Performans
+- **ISR:** katalog sayfaları `revalidate` ile önbelleğe alınır (stok/DB güncel kaldıkça yeniden doğrulanır).
+- **Lean Prisma sorguları:** vitrin sorguları yalnızca gerekli alanları seçer (`select`), yorum/sayım sorguları `count`-only.
+- **`next/image` hero:** anasayfa hero görseli optimize edilmiş, `priority`/boyutlandırılmış; hover ikinci görseller `lazy`.
+- **Reduced motion:** tüm animasyonlar (`Reveal`, `template.tsx` geçişi, fly-to-cart) `prefers-reduced-motion: reduce`'da devre dışı.
+- **Bundle analyzer:** `npm run analyze` → `.next/analyze/*.html` raporları (Turbopack uyumsuz olduğundan `--webpack` ile çalışır).
+
 ## Teknolojiler
 
 | Katman | Kullanılan |
 | --- | --- |
 | Framework | Next.js 16 (App Router), React 19, TypeScript |
-| Stil | Tailwind CSS v4, Material Symbols, CSS token tabanlı tema |
-| Animasyon | GSAP, Lenis (smooth scroll), `Reveal` bileşeni |
-| Veritabanı | PostgreSQL + Prisma 7 (`@prisma/adapter-pg`) |
+| Stil | Tailwind CSS v4, CSS token tabanlı tema, inline SVG ikonlar (`components/icons.tsx`) |
+| Animasyon | GSAP (`template.tsx` sayfa geçişi, fly-to-cart), Lenis (smooth scroll), `Reveal` (IntersectionObserver + CSS) |
+| Veritabanı | PostgreSQL + Prisma 7 (`@prisma/adapter-pg`, `prisma.config.ts`) |
 | Cache / state | Redis (ioredis) — Memurai (yerel) / Upstash (prod) |
 | Auth | Auth.js (next-auth v5 beta) — Credentials + PrismaAdapter, JWT session |
 | Ödeme | Stripe Checkout + webhook ile sipariş oluşturma |
 | State (client) | Zustand (persist) — sepet, favoriler, son bakılanlar |
 | Analytics | `@vercel/analytics` (pageview + özel event) |
 | SEO | Next metadata (OG/twitter/canonical), `sitemap.ts`/`robots.ts`, `next/og` (ImageResponse) |
+| Build analizi | `@next/bundle-analyzer` (`npm run analyze`) |
 
 ## Kurulum
 
@@ -88,12 +99,14 @@ cp .env.example .env
 PostgreSQL'in çalışıyor olması gerekir. Migrasyonlar ve seed:
 
 ```bash
-npx prisma migrate dev
+npx prisma migrate dev   # ilk denemede takılabilir → iptal edip tekrar çalıştırın
 npx prisma generate
 npx prisma db seed
 ```
 
-Seed içeriği: kategoriler, ürünler (varyant + görseller) ve demo admin kullanıcısı.
+`prisma.config.ts` şemayı `src/prisma/schema.prisma`, migrasyonları `src/prisma/migrations` üzerinden yönetir.
+
+Seed içeriği: **5 kategori** (hoodies, tees, bottoms, footwear, accessories) ve **11 ürün** (editorial alanlar + varyant + görsellerle) + demo admin kullanıcısı.
 
 ### 4. Çalıştırma
 
@@ -114,63 +127,58 @@ Admin paneli: [http://localhost:3000/admin](http://localhost:3000/admin)
 ## Proje yapısı
 
 ```
-app/
-  page.tsx                 # Anasayfa (metadata + Organization JSON-LD)
-  layout.tsx               # Kök layout (fonts, metadataBase, Analytics)
-  robots.ts / sitemap.ts   # robots.txt + sitemap.xml
-  admin/                   # Yönetim paneli (guard layout)
-    page.tsx, SalesChart.tsx           # Dashboard + 30 gün SVG grafiği
-    urunler/  (yeni, [id]/duzenle)     # Ürün CRUD + ProductList
-    kategoriler/  kullanicilar/  yorumlar/  # Yönetim UI'ları
-    siparisler/   ([id])               # Sipariş listesi + detay/durum
-  api/
-    admin/               # products, orders/[id], categories, users,
-                         # reviews, upload (hepsi ADMIN guard'lı)
-    auth/                # NextAuth handler + kayıt
-    cart/sync/           # Redis sepet senkronizasyonu
-    checkout/            # Stripe Checkout oturumu + stok rezervasyonu
-    newsletter/          # E-posta aboneliği (rate limit + upsert)
-    reviews/             # Yorum listeleme/ekleme (rate limit)
-    webhooks/stripe/     # Ödeme webhook'u (imza + idempotent)
-  not-found.tsx / error.tsx / global-error.tsx  # 404 + hata sınırları
-  opengraph-image.tsx    # Kök OG görseli (ImageResponse)
-  begendiklerim/         # Wishlist sayfası (client)
-  newsletter/  shipping/  returns/  terms/  contact/   # Bilgi sayfaları
-  giris/  hesabim/  sepet/  koleksiyonlar/  search/  urunler/[slug]/
-  urunler/[slug]/opengraph-image.tsx    # Ürün OG görseli (ImageResponse)
-components/
-  admin/  animations/  auth/  cart/  layout/  providers/  reviews/  store/
-lib/
-  admin.ts               # requireAdmin, ORDER_STATUSES, slugify
-  auth.ts                # NextAuth yapılandırması
-  cartSync.ts            # client: pull/push/merge sepet
-  catalog.ts             # server-only: Prisma → vitrin Product mapper,
-                         # searchProducts, getAllCategories
-  data.ts                # statik tasarım verisi (hero, koleksiyonlar, format)
-  flyToCart.ts           # "sepete uç" animasyonu
-  order.ts               # reserveStock/releaseStock/createOrderFromReservation/
-                         # applyOrderStatusChange + durum sabitleri
-  prisma.ts / redis.ts / stripe.ts     # istemci örnekleri (global singleton)
-  rateLimit.ts           # Redis tabanlı hız sınırı
-  site.ts                # SITE_URL / SITE_NAME sabitleri (SEO)
-store/
-  cart.ts                # Zustand sepet (persist) — maxQuantity clamp
-  wishlist.ts            # Zustand favoriler (persist)
-  recentlyViewed.ts      # Zustand son bakılanlar (persist, max 8)
-prisma/
-  schema.prisma          # Veri modeli
-  seed.ts                # Örnek veriler + demo admin
+src/
+  app/                       # Next.js App Router sayfaları
+    layout.tsx               # Kök layout (fonts, metadataBase, Analytics)
+    template.tsx             # GSAP sayfa geçiş animasyonu
+    page.tsx                 # Anasayfa (metadata + Organization JSON-LD)
+    robots.ts / sitemap.ts   # robots.txt + sitemap.xml
+    opengraph-image.tsx      # Kök OG görseli (ImageResponse)
+    not-found.tsx / error.tsx / global-error.tsx  # 404 + hata sınırları
+    (storefront)/
+      urunler/[slug]/        # Ürün detayı (SSG) + ProductDetail + OG görseli
+      koleksiyonlar/         # Filtreli katalog + Recently Viewed + kampanya bandı
+      search/                # Server-side arama + searchParams + loading
+      sepet/  begendiklerim/ # Sepet + CheckoutNotice / Wishlist
+    (auth)/giris/            # Giriş formu
+    (account)/hesabim/       # Sipariş geçmişi + [orderNumber] detay
+    admin/                   # Yönetim paneli (guard layout, SalesChart)
+      urunler/ (yeni, [id]/duzenle)  kategoriler/  kullanicilar/
+      yorumlar/  siparisler/ ([id])
+    newsletter/ shipping/ returns/ terms/ contact/   # Bilgi sayfaları
+    api/
+      admin/               # categories, orders/[id], products, reviews, upload, users
+      auth/                # NextAuth handler + register
+      cart/sync/  checkout/  newsletter/  reviews/
+      webhooks/stripe/     # Ödeme webhook'u (imza + idempotent)
+  components/
+    icons.tsx              # İnline SVG ikonlar (Material Symbols yok)
+    layout/  (Header, Footer)   ui/  (Hero, ProductCard, Reveal, ...)
+    admin/  cart/  providers/  reviews/
+  lib/                     # Ortak yardımcılar (data, flyToCart, site, utils)
+  modules/                 # Domain modülleri
+    catalog/   (types, queries, recommendations, client, recently-viewed-store)
+    cart/      (store, sync)   wishlist/ (store)   reviews/
+    checkout/  (service, reservation, webhooks)    orders/ (order, queries)
+    admin/     (dashboard, products, orders, categories, users, reviews)
+    auth/      (config, guards)
+  infrastructure/          # Dış servis bağlantıları (global singleton)
+    prisma/  redis/  (rate-limit)  stripe/  storage/
+  prisma/
+    schema.prisma          # Veri modeli
+    migrations/            # (1) init → (…) → product_editorial_fields
+    seed.ts                # Örnek veriler + demo admin
 scripts/
-  order-smoke.ts         # Stok/sipariş regresyon testleri
-  webhook-smoke.ts       # Webhook imza + idempotency testleri
-public/uploads/products/ # Admin görsel upload'ları (gitignore'lu)
+  order-smoke.ts           # Stok/sipariş regresyon testleri
+  webhook-smoke.ts         # Webhook imza + idempotency testleri
+public/uploads/products/   # Admin görsel upload'ları (gitignore'lu)
 ```
 
 ## Veri modeli (Prisma)
 
 - `User` — hesap, rol (ADMIN/CUSTOMER), bcrypt parola hash'i
 - `Account` / `Session` / `VerificationToken` — Auth.js adaptör tabloları
-- `Category` / `Product` / `ProductImage` / `ProductVariant` — katalog; varyant `productId+size+color` benzersiz, `sku` benzersiz
+- `Category` / `Product` / `ProductImage` / `ProductVariant` — katalog; varyant `productId+size+color` benzersiz, `sku` benzersiz. Product'ta **editorial alanlar:** `objectNumber` (LD-001…), `campaign`, `material`, `weight`, `fit`, `releaseDate`
 - `Order` / `OrderItem` — siparişler; `orderNumber` + `stripeSessionId` + `stripePaymentIntentId` benzersiz; kalemlerde ürün adı/fiyat/SKU/görsel snapshot'ı; `stockConsumed`/`stockRestored` bayrakları
 - `OrderReservation` — checkout'ta rezerve edilen stok kaydı (ACTIVE → CONSUMED/RELEASED); webhook buradan siparişi kurar veya süresi dolunca stoku iade eder
 - `Cart` / `CartItem` — DB sepet şeması (aktif senkronizasyon Redis üzerinden)
@@ -214,6 +222,7 @@ npm run test:webhook        # webhook imza doğrulama (eksik/bozuk→400, secret
 npm run dev       # geliştirme sunucusu
 npm run build     # production build
 npm run start     # build sonrası sunucu
+npm run analyze   # bundle analizi → .next/analyze/*.html (--webpack)
 npm run lint      # ESLint
 npm test          # order + webhook regresyon testleri
 npx prisma db seed   # veritabanını örnek veriyle doldurur
@@ -237,4 +246,4 @@ npx prisma db seed   # veritabanını örnek veriyle doldurur
 - Görsel upload yalnızca ADMIN; dosya adı benzersiz (`<timestamp>-<hex>`), mime whitelist + 5MB limit. Prod'ta kalıcı depolama gerekir (yukarıya bakın).
 - `next/og` ürün OG görseli `nodejs` runtime kullanır (Edge runtime deprecated uyarısı veriyordu).
 - `npm run build` sonrası aynı `.next` ile `npm run dev` başlatmak `/api/auth/csrf` 404 bozulmasına yol açabiliyor; bu durumda `.next` silinip dev yeniden başlatılmalıdır.
-- Statik tasarım verileri (`hero`, koleksiyon etiketleri) `lib/data.ts`'ten gelir; DB'den bağımsızdır. Katalog akışı (`lib/catalog.ts`) tamamen DB'den okur.
+- Statik tasarım verileri (`hero`, koleksiyon etiketleri, ürün görselleri/metinleri) `lib/data.ts`'ten gelir ve seed buradan beslenir; katalog okuma akışı (`modules/catalog/queries.ts`) tamamen DB'den okur.
