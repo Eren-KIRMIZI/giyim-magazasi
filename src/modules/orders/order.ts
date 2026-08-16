@@ -43,6 +43,8 @@ export async function createOrderFromReservation(
   data: {
     stripeSessionId: string;
     paymentIntent?: string | null;
+    customerEmail?: string | null;
+    customerName?: string | null;
     stockConsumed: boolean;
     reconsumeStock?: boolean;
   }
@@ -52,10 +54,13 @@ export async function createOrderFromReservation(
     : []) as unknown as ReservationLine[];
   if (lines.length === 0) return;
 
-  const user = await prisma.user.findUnique({
-    where: { id: reservation.userId },
-    select: { email: true, name: true },
-  });
+  let user = null;
+  if (reservation.userId) {
+    user = await prisma.user.findUnique({
+      where: { id: reservation.userId },
+      select: { email: true, name: true },
+    });
+  }
 
   const total = fromCents(
     lines.reduce((sum, l) => sum + lineTotalCents(l.unitPrice, l.quantity), 0)
@@ -70,8 +75,8 @@ export async function createOrderFromReservation(
         total,
         stripeSessionId: data.stripeSessionId,
         stripePaymentIntentId: data.paymentIntent ?? null,
-        customerEmail: user?.email ?? null,
-        customerName: user?.name ?? null,
+        customerEmail: data.customerEmail ?? user?.email ?? null,
+        customerName: data.customerName ?? user?.name ?? null,
         stockConsumed: data.stockConsumed,
         items: {
           create: lines.map((l) => ({

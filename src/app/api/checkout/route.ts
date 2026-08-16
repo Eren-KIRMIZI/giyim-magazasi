@@ -23,15 +23,12 @@ const ALLOWED_ORIGINS = new Set(
 
 export async function POST(request: Request) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json(
-      { error: "Ödeme için giriş yapmalısınız." },
-      { status: 401 }
-    );
-  }
+  const userId = session?.user?.id ?? null;
 
   // Checkout oturumu + stok rezervasyonu DoS'u: kullanıcı başına 10/saat
-  const limited = await rateLimit(`checkout:${session.user.id}`, 10, 3600);
+  const clientIp = request.headers.get("x-forwarded-for") || "unknown-ip";
+  const rateLimitKey = userId ? `checkout:${userId}` : `checkout:guest:${clientIp}`;
+  const limited = await rateLimit(rateLimitKey, 10, 3600);
   if (!limited.ok) {
     return NextResponse.json(
       { error: "Çok fazla ödeme denemesi. Lütfen daha sonra tekrar deneyin." },
@@ -55,7 +52,7 @@ export async function POST(request: Request) {
     : (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000");
 
   try {
-    const result = await createCheckoutSession(session.user.id, items, safeOrigin);
+    const result = await createCheckoutSession(userId, items, safeOrigin);
     return NextResponse.json({ url: result.url });
   } catch (err) {
     if (err instanceof CheckoutValidationError) {

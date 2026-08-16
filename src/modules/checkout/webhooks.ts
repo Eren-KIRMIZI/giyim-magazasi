@@ -7,7 +7,8 @@ import {
   type ReservationLine,
 } from "./reservation";
 import { createOrderFromReservation, revivePaidOrder } from "@/modules/orders";
-import { lineTotalCents } from "@/lib/money";
+import { lineTotalCents, fromCents } from "@/lib/money";
+import { sendOrderConfirmationEmail } from "@/infrastructure/email/resend";
 
 function isUniqueViolation(err: unknown): boolean {
   return (err as { code?: string } | null)?.code === "P2002";
@@ -71,6 +72,8 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
           await createOrderFromReservation(reservation, "PAID", {
             stripeSessionId,
             paymentIntent,
+            customerEmail: session.customer_details?.email ?? null,
+            customerName: session.customer_details?.name ?? null,
             stockConsumed: true,
             reconsumeStock: true,
           });
@@ -87,12 +90,34 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
         await createOrderFromReservation(reservation, "PAID", {
           stripeSessionId,
           paymentIntent,
+          customerEmail: session.customer_details?.email ?? null,
+          customerName: session.customer_details?.name ?? null,
           stockConsumed: true,
         });
       } catch (err) {
         if (isUniqueViolation(err)) break;
         throw err;
       }
+      
+      const order = await prisma.order.findUnique({
+        where: { stripeSessionId },
+        include: { items: true },
+      });
+
+      if (order && order.customerEmail) {
+        await sendOrderConfirmationEmail(
+          order.customerEmail,
+          order.customerName || "Değerli Müşterimiz",
+          order.orderNumber,
+          `${order.total.toString()} EUR`,
+          order.items.map(i => ({
+            name: i.name,
+            quantity: i.quantity,
+            size: i.size,
+          }))
+        );
+      }
+      
       console.log("Order created for session:", stripeSessionId);
       break;
     }

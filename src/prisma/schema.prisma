@@ -133,8 +133,8 @@ model ProductVariant {
 model Order {
   id                 String    @id @default(cuid())
   orderNumber        String    @unique @default("")
-  userId             String
-  user               User      @relation(fields: [userId], references: [id])
+  userId             String?
+  user               User?     @relation(fields: [userId], references: [id])
   status             String    @default("PENDING") // PENDING | PAID | SHIPPED | DELIVERED | CANCELLED | REFUNDED | FAILED
   total              Decimal   @db.Decimal(10, 2)
   stripeSessionId    String?   @unique
@@ -177,7 +177,7 @@ model OrderItem {
 model OrderReservation {
   id              String    @id @default(cuid())
   stripeSessionId String    @unique
-  userId          String
+  userId          String?
   status          String    @default("ACTIVE") // ACTIVE | CONSUMED | RELEASED
   items           Json
   expiresAt       DateTime? // stok rezervasyonu bu tarihte zorunlu iade edilir (cron / lazy)

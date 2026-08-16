@@ -56,7 +56,7 @@ export default function Header() {
           </span>
         </div>
       </div>
-      <nav className="bg-surface/90 backdrop-blur-md w-full top-0 sticky z-50 border-b border-on-surface">
+      <nav aria-label="Main Navigation" className="bg-surface/90 backdrop-blur-md w-full top-0 sticky z-50 border-b border-on-surface">
         <div className="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-2.5 max-w-container-max mx-auto">
           <Link
             href="/"

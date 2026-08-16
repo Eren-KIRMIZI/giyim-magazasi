@@ -39,7 +39,7 @@ export class StripeUnavailableError extends Error {
 }
 
 export async function createCheckoutSession(
-  userId: string,
+  userId: string | null,
   items: CheckoutLineItem[],
   origin: string
 ): Promise<{ url: string | null }> {
@@ -123,7 +123,7 @@ export async function createCheckoutSession(
   try {
     checkoutSession = await stripe.checkout.sessions.create({
       mode: "payment",
-      metadata: { userId },
+      metadata: userId ? { userId } : {},
       line_items: resolved.map((ri) => ({
         quantity: ri.quantity,
         price_data: {
@@ -151,7 +151,7 @@ export async function createCheckoutSession(
     await prisma.orderReservation.create({
       data: {
         stripeSessionId: checkoutSession.id,
-        userId,
+        userId: userId ?? null,
         status: RESERVATION_STATUS.ACTIVE,
         expiresAt: reservationExpiresAt(),
         items: resolved.map((ri) => ({
