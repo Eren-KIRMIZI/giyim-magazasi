@@ -205,7 +205,7 @@ export interface ReservationLine {
 }
 
 export interface ReservationRecord {
-  userId: string;
+  userId: string | null;
   items: unknown;
 }
 

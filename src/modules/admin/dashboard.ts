@@ -183,7 +183,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       orderNumber: o.orderNumber,
       total: Number(o.total),
       status: o.status,
-      email: o.user.email,
+      email: o.user?.email ?? o.customerEmail ?? "Misafir",
       createdAt: o.createdAt,
     })),
   };

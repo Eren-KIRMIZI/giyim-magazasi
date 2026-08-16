@@ -14,7 +14,7 @@ export interface OrderItemRow {
 
 export interface OrderRow {
   id: string;
-  userId: string;
+  userId: string | null;
   orderNumber: string;
   total: number;
   status: string;

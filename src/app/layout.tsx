@@ -49,6 +49,7 @@ export default function RootLayout({
   return (
     <html
       lang="tr"
+      suppressHydrationWarning
       className={`${geist.variable} ${anton.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="bg-surface text-on-surface font-body-md min-h-screen flex flex-col">
