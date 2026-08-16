@@ -98,6 +98,7 @@ cp .env.example .env
 | `NEXT_PUBLIC_SITE_URL` | SEO taban URL'i (canonical/OG/sitemap; yoksa `https://lastdance.store`) |
 | `ALLOWED_ORIGINS` | Checkout open-redirect allowlist'i — virgülle ayrılmış ek origin'ler (varsayılan: `NEXT_PUBLIC_APP_URL` + `NEXT_PUBLIC_SITE_URL` + `http://localhost:3000`) |
 | `CRON_SECRET` | Süresi dolan rezervasyon temizliği için Bearer token (`/api/cron/release-expired`) |
+| `OPENROUTER_API_KEY` | AI Fashion Studio görsel üretimi (`google/gemini-2.5-flash-image`) — https://openrouter.ai/settings/keys |
 
 > Not: `next.config.ts`'te görsel uzak host yalnızca `lh3.googleusercontent.com` (`/aida-public/**`) için açık. `public/uploads` lokaldir ve `images.remotePatterns` gerektirmez.
 
@@ -213,6 +214,8 @@ public/uploads/products/   # Admin görsel upload'ları (gitignore'lu)
 | GET | `/api/admin/users` · PATCH/DELETE `/[id]` | Kullanıcı arama/rol/silme (ADMIN, guard'lı) |
 | GET | `/api/admin/reviews` · DELETE `/[id]` | Yorum moderasyonu (ADMIN) |
 | POST | `/api/admin/upload` | Görsel yükleme (ADMIN; 5MB, mime whitelist) |
+| POST | `/api/admin/ai-fashion/generate` | AI model çekimi üret (ADMIN; multipart, OpenRouter/Nano Banana) |
+| POST | `/api/admin/ai-fashion/save` | Üretilen görselleri ürün galerisine ekler (ADMIN; `ProductImage`) |
 
 ## CI/CD
 
