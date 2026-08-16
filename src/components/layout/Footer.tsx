@@ -1,11 +1,11 @@
 import Link from "next/link";
 
 const FOOTER_LINKS = [
-  { label: "Newsletter", href: "/newsletter" },
-  { label: "Shipping", href: "/shipping" },
-  { label: "Returns", href: "/returns" },
-  { label: "Terms", href: "/terms" },
-  { label: "Contact", href: "/contact" },
+  { label: "NEWSLETTER", href: "/newsletter" },
+  { label: "SHIPPING", href: "/shipping" },
+  { label: "RETURNS", href: "/returns" },
+  { label: "TERMS", href: "/terms" },
+  { label: "CONTACT", href: "/contact" },
 ];
 
 export default function Footer() {

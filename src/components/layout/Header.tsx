@@ -13,9 +13,9 @@ import { Icon } from "@/components/icons";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const NAV_LINKS = [
-  { label: "New Arrivals", href: "/#yeni-gelenler" },
-  { label: "Collections", href: "/koleksiyonlar" },
-  { label: "Newsletter", href: "/newsletter" },
+  { label: "NEW ARRIVALS", href: "/#yeni-gelenler" },
+  { label: "COLLECTIONS", href: "/koleksiyonlar" },
+  { label: "NEWSLETTER", href: "/newsletter" },
 ];
 
 const ANNOUNCEMENT = `The Final Drop — Free shipping over €${FREE_SHIPPING_THRESHOLD} · While objects last`;
@@ -198,7 +198,7 @@ export default function Header() {
                 className="font-headline-md text-headline-md uppercase text-on-surface hover:text-primary transition-colors flex items-center gap-2"
               >
                 <Icon name="search" className="w-[22px] h-[22px]" />
-                Search
+                SEARCH
               </Link>
               <Link
                 href="/begendiklerim"
@@ -206,7 +206,7 @@ export default function Header() {
                 className="font-headline-md text-headline-md uppercase text-on-surface hover:text-primary transition-colors flex items-center gap-2"
               >
                 <Icon name="favorite" className="w-[22px] h-[22px]" />
-                Wishlist
+                WISHLIST
                 {wishlistCount > 0 && ` (${wishlistCount})`}
               </Link>
               {status === "authenticated" ? (
@@ -225,7 +225,7 @@ export default function Header() {
                   className="font-headline-md text-headline-md uppercase text-on-surface hover:text-primary transition-colors flex items-center gap-2"
                 >
                   <Icon name="person" className="w-[22px] h-[22px]" />
-                  Login
+                  LOGIN
                 </Link>
               )}
             </div>
@@ -236,7 +236,7 @@ export default function Header() {
               }`}
             >
               <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
-                Theme
+                THEME
               </span>
               <ThemeToggle />
             </div>

@@ -55,7 +55,7 @@ export default function ProductCard({
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center font-label-mono text-label-mono uppercase text-on-surface-variant">
-            No Image
+            NO IMAGE
           </div>
         )}
         {firstImage && hasAlternate && alternateImage && (
@@ -82,13 +82,13 @@ export default function ProductCard({
         {soldOut && (
           <div className="absolute inset-0 bg-surface/60 flex items-center justify-center">
             <span className="bg-secondary text-on-secondary px-2 py-1 font-label-mono text-label-mono uppercase">
-              Sold Out
+              SOLD OUT
             </span>
           </div>
         )}
         {!soldOut && (
           <div className="absolute inset-x-0 bottom-0 bg-on-surface text-surface font-label-mono text-label-mono uppercase py-3 text-center flex items-center justify-center gap-2 translate-y-full group-hover:translate-y-0 group-hover:bg-primary transition-all duration-300">
-            View Object
+            VIEW OBJECT
             <span className="text-[10px] leading-none transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
               &#8599;
             </span>

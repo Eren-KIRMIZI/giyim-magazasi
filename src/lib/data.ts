@@ -7,12 +7,10 @@ export interface Collection {
 }
 
 const IMG = {
-  logo: "https://lh3.googleusercontent.com/aida-public/AB6AXuAong6Glo7Jdhc9729PTYBtVaOpdNgbrB6kyG3wELrQcaoJjpFHh7E2edOJYN9VnjXKf-0x3sqaexIfggmwWU-78Kwnngaea3r1zISQ9TQN1y-cOP7xKG7i0NTMsEG2Py09UJnDm_owUbq6WvabvGAtFrmtSc6Ci4k3Qw5noXYpkYlkZoCdJ7ymqNJB0vB4BljNmU9cVIIyPb86whDEF-eCZiWeYL9han560nGrDfkEIYe34JFnik_6PA",
-  hero: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzMh6fRDfkSM3SNPiL7576E0rv7YSo_zMVFQMFZs9t5_Nk63qNYz_KlomIWfL-_2IkmpIqnBcDYxxZpRcu0piF3HuW4xPdzeD8SR15ehP4HjEflckOZSbSDku1Rk5sJ8_vs8wzddf3DezYdfAywmYW1wdRwdWqaomM-Dsf1cx6K0OGj527Nzw6FJuiRxK1VT_Z_th-R5oS4tq5rR8mKIBSTsQGwIh6oRKUT7ASzCWaMQ5DLEMl25lKsA",
-  blackHoodie:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuB3dP2AQM_V5Z8VRogQhzfJnqbg_ID1F0CtA-Ww1OMOKzrpguIGavduJfIbhJqPbTu3W5oAIXHBkm71oYYdbbU63Q-zppWE-55ZDNtL2Au_6a3xCUWoF6ErqfjxKF3O1b7-RNBzeqpkgkAnLsUbKUKYo7zPYUZfA3AR17yj4URFWX25iEEMvwU-rHiTvbduBM1M0ky1j_IoPOaNuKVtfyP9uE1ZYfyvY96LzexWkNsnhdRs0Z_9MJ96uw",
-  redHoodie:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuDOUJh1fyy5UJKM6Fqf-hjv96law3DjMRpvXL5Es8Q5sMRXdxdlEaK-rWVMEmeWAywi6SVbamZohAnBuR1PKDZyr7TAmTdrS7k6uzOpO_goLXoiGdrifCjmOnM5AwPa_O1Kz59W-KkXlpyMu4L5eUPXVhv641RzcENwLrDLspNiDLG9zqLY75gvfEEfYA3NjIbChNajDhW0Hm1HLlmP0xJX8V7CkeAa1vM81AHAsHNx7Ehtp_xxGbrBtA",
+  logo: "/images/logo.jpg",
+  hero: "/images/hero.jpg",
+  blackHoodie: "/images/black_hoodie.jpg",
+  redHoodie: "/images/red_hoodie.jpg",
   whiteHoodie:
     "https://lh3.googleusercontent.com/aida-public/AB6AXuAz7TfBzjZHRirMOVmD1f-CYdaRy2mK5kCjW_nQeo38S6DEqVZgQ-N1uoo5CUmPzsVWrm9hBIR4A9r1Cf5L6XDgDaFr1tWvL9FaJ9MeTB9PgAS0QQkNMoikaBP14QgLNSGDzUunliGYY52fGW11GhNn8JRQqAgja98O3pg-KUWQqZ5dFGZiOmcag1Z7cCjUKXmtJSfcQ221ffZwquMd7sN6DXh3yssZgfpe0R2thjmr8FM4SYzALVlmgw",
   signatureMain:
@@ -23,8 +21,7 @@ const IMG = {
     "https://lh3.googleusercontent.com/aida-public/AB6AXuA6D6XoYsYiBhS9iVvTyQDvzr6RWgqPJ12Mobp1lDtsMEQX8eswjwpV5ID1iXdPUroWI5pli_lS0CZ8JWITVlcm-WLSXUiXy7hDbUTwFGMDWpMSbsMBp4A83dz8-REmeVUo7BRBtaU24sSoT5hdPsenDLumUIDL_sYu2hfKuMAOjtzOY0U7_sXqDqfACFlgdli4CBPrZ5F0Q3zzwt4ovUfU2pn6O8ZkRuLJASRX4f32eouEFTtC_U_pKQ",
   signatureZipper:
     "https://lh3.googleusercontent.com/aida-public/AB6AXuCqGrJVo09iww319Jz0Xg7CGSSwLgm69TyFmEm0MeIDGD40HkiRPioQaYrmlPpG8KWv9G0vpj7rwoU9aGYo5PleHKlgxjZjcAhraf5nDYq95uMshC8giMM3VZ8JQL2CkQtGsxUSbNrJg9DZItZrBIuIu3IkeZhSnN2HvXbPJVVfnfabMQ-T3oNZdBySAnc8X5O_cCX3aSM8MRMKzTzag12TaHesr5u0FZqR5WrWXsDmjDWTmGCXv49txA",
-  utilityCargo:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuDFbG5w_EMdbmpU3cECQWl2EPC265LIYvGuCa6hdFfDRAv4yhW4rOi2kgrtVHANoiqQlqebch-KWWfTwGqLiCFc8_xlFY57CP4Kp2X9C0H833FZGXOgEoJj4emdzIWjYCQLr2IgtCVHlix9KV3rATi7K6DfiYxxYSKM-BnYTwPJF6lJTh40cu11g8avnrSArRgg1VVzccJH7C89B3aY6JSldsHuOqhsPO8V6dXFAExYOdr-j1Kx2nT_XQ",
+  utilityCargo: "/images/cargo_pants.jpg",
   blockRunner:
     "https://lh3.googleusercontent.com/aida-public/AB6AXuDc8YvXzn5aC86GxLlzHHITBX5LzBOgqSHdrqcXR93c96Y296NUYAPBnD7LLEaK9OMDRpJ415LUEmKVMi8F3uKlfLtXQ3bF_dGEUADWkGjPVpjGvl9uMJYvgv8JGy086u7c6b0FP3XxBavTkNrwP4VNp68zwN4OOx2saYWYPkoKF-xAj2vGTkVwL2T-e9MfyuHwnGn70IUwWR6vQxChnnGC4US94kPHcjHl3FNaaETiRbC3FtTreaztiQ",
   techPouch:
