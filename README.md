@@ -1,177 +1,132 @@
-# LAST DANCE - Giyim Magazasi
+# LAST DANCE | Official Store
 
-Brutalist tasarimli, tam yigin (full-stack) e-ticaret platformu. Next.js 16 App Router, TypeScript ve Tailwind CSS v4 uzerine kuruludur; PostgreSQL (Prisma 7), Redis (Memurai / Upstash), Auth.js (NextAuth v5), Stripe Checkout ve Vercel Analytics entegrasyonuna sahiptir.
+LAST DANCE, premium streetwear (sokak giyimi) markaları için tasarlanmış modern, yüksek performanslı ve tam donanımlı bir e-ticaret web uygulamasıdır. Proje, "brutalist" (keskin ve endüstriyel) bir tasarım anlayışına sahip olup, kullanıcılara kesintisiz, güvenli ve erişilebilir bir alışveriş deneyimi sunmak üzere mühendislik pratikleri gözetilerek geliştirilmiştir.
 
----
+## Mimari ve Teknoloji Yığını (Tech Stack)
 
-## 1. Ozellikler
+Bu proje, en modern JavaScript/TypeScript ekosistemi kullanılarak, yüksek ölçeklenebilirlik ve performans hedeflenerek inşa edilmiştir:
 
-### Vitrin
-- **Anasayfa:** Hero, yeni gelenler ve koleksiyon bolumleri; Reveal bileseni IntersectionObserver ve CSS transition ile calisir (prefers-reduced-motion destekli); template.tsx GSAP sayfa gecis animasyonu icerir. Hero bolumunde dikey arsiv etiketi ve marquee kayan yazi bandi bulunur.
-- **Header:** Ust duyuru bandi marquee animasyonlu, yapiskan (sticky) ve backdrop-blur navigasyon, aktif link cizgisi, gercek navigasyon linkleri (New Arrivals, Collections, Newsletter), arama, favori ve sepet ikonlari, sepet/favori sayac rozetleri, tam ekran mobil menu (body scroll kilidi ve tema gecisi ile).
-- **Urun Karti:** Urun sirasina gore nesne numaralandirma, urun renk numuneleri (swatches), hover durumunda ikinci gorsele yumusak gecis, indirimli fiyat (compareAtPrice) ve cizili fiyat gosterimi, favori butonu.
-- **Koleksiyonlar:** /koleksiyonlar - Kategori, beden, renk ve fiyat filtreleme; mobilde acilir filtre paneli; son incelenen urunler (Recently Viewed) bolumu.
-- **Arama:** /search - Sunucu tarafli arama, ILIKE tabanli filtreleme (isim, alt baslik, aciklama), siralama secenekleri (newest, price_asc, price_desc, popular). Filtreler URL parametrelerine senkronize edilir, aktif filtre cipleri uzerinden tek tikla kaldirilabilir.
-- **Urun Detayi:** /urunler/[slug] (SSG, slug tabanli) - Gorsel galeri (sayac, minyaturler ve klavye/ok gecisi), beden/renk secimi, varyant bazli stok kontrolu (tukenen varyantlarda disabled durumu, kritik stokta adet uyarisi ve dinamik stok cubugu), sepete ekleme ve hemen satin alma (Buy Now), favori butonu, editorial ozellikler tablosu (nesne no, kampanya, kumas, gramaj, kalip, cikis tarihi), dogrulanmis musteri yorumlari bolumu.
-- **Favoriler (Wishlist):** /begendiklerim - Zustand ve localStorage kaliciligi ile urun kartlarinda ve detay sayfasinda favori yonetimi.
-- **Karanlik Mod (Dark Mode):** CSS degiskenleri uzerinden calisan tema yonetimi (ThemeToggle bileseni, useSyncExternalStore, localStorage ve sistem tercihi destegi, sifir parlama saglayan no-flash inline script).
-- **Sepet:** Zustand ve localStorage entegrasyonlu sepet yapisi; urun adetleri stok limitine gore sinirlandirilir; oturum acmis kullanicilarda Redis uzerinden cift yonlu senkronizasyon saglanir; ucretsiz kargo esik cubugu ve hizli odeme yonlendirmesi bulunur.
-- **Bulten (Newsletter):** /newsletter sayfasi ve API rotasi (e-posta formati dogrulama, IP bazli rate limit, veri tabanina kayit).
-- **Bilgi Sayfalari:** /shipping, /returns, /terms, /contact sayfalari; ozel 404 (not-found.tsx), hata yakalama (error.tsx) ve global hata (global-error.tsx) sinirlari.
+*   **Çerçeve (Framework):** Next.js 16 (App Router, Turbopack)
+*   **Dil:** TypeScript (Sıkı tip güvenliği ile uçtan uca koruma)
+*   **Stil & Tasarım:** Tailwind CSS ve özel CSS değişkenleri (Tam uyumlu Dark/Light tema desteği)
+*   **Veritabanı:** PostgreSQL
+*   **ORM:** Prisma
+*   **Kimlik Doğrulama:** NextAuth.js (Güvenli oturum yönetimi ve Rol tabanlı erişim kontrolü - RBAC)
+*   **Durum Yönetimi (State Management):** Zustand (İstemci tarafında Sepet ve Favoriler yönetimi)
+*   **Ödeme Altyapısı:** Stripe
+*   **İşlemsel E-postalar (Transactional Emails):** Resend (React Email entegrasyonu ile)
+*   **Otomatik Testler:** Vitest (Birim Testleri) ve Playwright (Uçtan Uca - E2E Testler)
 
-### Kimlik ve Siparis Yonetimi
-- **Kimlik Dogrulama:** Kayit ve giris (/giris), bcryptjs parola hash'leme (cost 12), NextAuth v5 JWT oturum stratejisi; rol kontrolu (ADMIN/CUSTOMER) guvenlik amaciyla her istekte veri tabanindan guncel olarak dogrulanir; Redis tabanli brute-force ve rate limit korumasi (IP ve e-posta bazli).
-- **Hesap Paneli:** /hesabim - Siparis gecmisi listesi ve /hesabim/[orderNumber] uzerinden detayli siparis takibi.
-- **Yorum Sistemi:** Oturum acmis kullanicilar icin urun bazinda puanlama ve yorum yapma (upsert mantigi ile her kullanici urun basina tek yorum girebilir).
-- **Stripe Checkout:** Sepet verisi sunucuda dogrulanir; fiyatlar veri tabanindan okunarak siparis kalemlerine anlik snapshot alinir; checkout asamasinda atomik stok rezervasyonu (OrderReservation) yapilir. Webhook imza dogrulamali ve idempotent calisir:
-  - checkout.session.completed: Siparis ve kalem snapshot'larini olusturur, rezervasyonu tuketildi (CONSUMED) durumuna getirir.
-  - expired / async_payment_failed: Rezervasyon serbest birakilir, stok iade edilir.
-  - charge.refunded: Iade durumunda stok geri yuklenir (stockRestored bayragi ile tekil islem).
-  - Rezervasyon Zaman Asimi: Her rezervasyona 24 saatlik sure taninir; suresi dolan rezervasyonlar cron gorevi (/api/cron/release-expired) veya odeme oncesi kontrol ile otomatik serbest birakilir.
+## Detaylı Proje Özellikleri
 
-### Yonetim Paneli (/admin, Sadece ADMIN Rolu)
-- **Gosterge Paneli (Dashboard):** Urun, siparis, kullanici ve kategori sayaclari; toplam ve son 30 gunluk ciro; aktif rezervasyon ve basarisiz islem sayilari; 30 gunluk ciro SVG cizgi grafigi; en cok satanlar; kritik stok uyarilari (5 ve alti); son siparisler tablosu.
-- **Urun Yonetimi:** /admin/urunler - Urun ekleme, duzenleme, silme; editoryal veri alanlari, gorsel yukleme (/api/admin/upload), varyant ve stok tablosu yonetimi.
-- **Kategori Yonetimi:** /admin/kategoriler - Kategori ekleme, guncelleme, silme (urunu bulunan kategori silinemez).
-- **Kullanici Yonetimi:** /admin/kullanicilar - Kullanici arama, rol degistirme ve guvenli silme (admin kendini silemez / dusuremez).
-- **Yorum Moderasyonu:** /admin/yorumlar - Urun yorumlarini inceleme ve moderasyon amacli silme.
-- **Siparis Yonetimi:** /admin/siparisler ve /admin/siparisler/[id] - Siparis filtreleme, detay inceleme ve durum guncelleme (iptal durumunda stok iadesi tetiklenir).
-- **Fashion Studio:** /admin/ai-studio - Gorsel modelleme ve katalog studiyosu entegrasyonu.
+Proje, standart bir e-ticaret sitesinin ötesinde karmaşık iş kurallarını (business logic) yöneten bir dizi gelişmiş özellik barındırır.
 
----
+### Kullanıcı Deneyimi ve Arayüz (UI/UX)
+*   **Brutalist Tasarım Sistemi:** Markanın kimliğine uygun olarak tasarlanmış yüksek kontrastlı, keskin hatlı özel kullanıcı arayüzü. 
+*   **Kusursuz Tema Geçişleri:** `next-themes` kullanılarak Hydration hatası (Sunucu-İstemci HTML uyuşmazlığı) yaşatmayan, kullanıcının sistem tercihine duyarlı Karanlık (Dark) ve Aydınlık (Light) mod.
+*   **Tam Duyarlı (Responsive) Tasarım:** Mobil, tablet ve masaüstü cihazlar için özel olarak optimize edilmiş akıcı arayüz.
+*   **Erişilebilirlik (Accessibility - a11y):** Ekran okuyucular için ARIA etiketleri, klavye ile tam gezinme desteği (Focus trapping) ve semantik HTML yapısı.
+*   **Yapay Zeka Destekli Görseller:** Sitedeki tüm konsept fotoğraflar ve ürün kareleri HD kalitesinde özel olarak oluşturulmuştur.
 
-## 2. Teknolojiler
+### E-Ticaret ve Alışveriş Akışı
+*   **Kapsamlı Ürün Kataloğu:** Dinamik ürün listeleme, kategoriler arası geçiş, detaylı beden ve renk varyasyonları ile gerçek zamanlı stok durumunu gösteren ürün sayfaları.
+*   **Akıllı Sepet ve Favoriler (Zustand):** Kullanıcının sepetini ve favorilediği ürünleri sayfa yenilense dahi tarayıcı hafızasında (LocalStorage) güvenle saklayan, Hydration uyumlu istemci durum yönetimi.
+*   **Misafir Alışverişi (Guest Checkout):** Kullanıcıların hesap oluşturma zorunluluğu olmadan, doğrudan e-posta adresleri üzerinden satın alım yapabilmelerine olanak tanıyan, dönüşüm oranını (conversion rate) artıran esnek altyapı.
+*   **Stripe Entegrasyonu:** Güvenli kredi kartı ödemeleri için Stripe Checkout Sessions kullanımı.
 
-| Katman | Kullanilan Teknolojiler |
-| --- | --- |
-| Framework | Next.js 16 (App Router), React 19, TypeScript |
-| Stil | Tailwind CSS v4, CSS Token Tabanli Tema, Inline SVG Ikonlar |
-| Animasyon | GSAP, Lenis Smooth Scroll, Reveal (IntersectionObserver) |
-| Veri Tabani | PostgreSQL, Prisma 7 (@prisma/adapter-pg, prisma.config.ts) |
-| Onbellek ve Hiz Sinirlama | Redis (ioredis / Upstash REST API) |
-| Kimlik Dogrulama | Auth.js (NextAuth v5 beta), Credentials Provider, PrismaAdapter |
-| Odeme | Stripe Checkout, Webhook Entegrasyonu, Atomik Stok Yonetimi |
-| Durum Yonetimi (Client) | Zustand (persist middleware) |
-| Analitik ve SEO | @vercel/analytics, Metadata API, JSON-LD, sitemap.ts, robots.ts, next/og |
+### Gelişmiş Envanter ve Sipariş Yönetimi
+*   **Eşzamanlı Stok Rezervasyon Sistemi:** Aynı ürünü aynı anda almaya çalışan kullanıcıların "stokta olmayan" bir ürünü satın almasını (Overselling) engelleyen gelişmiş sistem. Kullanıcı ödeme adımına geçtiğinde ürün geçici olarak (Örn: 24 saat) rezerve edilir (`OrderReservation`). Satın alım tamamlanmazsa, bu süre sonunda ürün otomatik olarak tekrar genel stoğa dahil edilir. Transaction bazlı (Prisma $transaction) güvenli veritabanı yazımları ile Race Condition problemleri çözülmüştür.
+*   **Stripe Webhook Mimarisi:** Ödeme başarıyla tamamlandığında Stripe tarafından tetiklenen webhook (`checkout.session.completed`), siparişi güvenli bir arka plan işlemi olarak oluşturur, rezerve stoğu nihai olarak eksiltir ve kullanıcıya otomatik makbuz e-postası gönderir.
+*   **İşlemsel E-Postalar (Resend):** Sipariş tamamlandığında Resend ve React Email şablonları kullanılarak kullanıcıya anında özel tasarımlı sipariş onay e-postası (`OrderConfirmation`) iletilir.
 
----
+### Yönetici (Admin) Paneli
+*   **Rol Tabanlı Erişim:** Sadece veritabanında `ADMIN` yetkisi tanımlanmış kullanıcıların erişebildiği güvenli `/admin` rotası.
+*   **Kapsamlı Gösterge Paneli (Dashboard):** Toplam gelir, sipariş sayısı, kritik stok uyarısı (azalan ürünler) ve son siparişlerin tek ekrandan takibi.
+*   **Sipariş Takibi:** Misafir veya kayıtlı kullanıcı ayrımı gözetmeksizin tüm siparişlerin durumlarının yönetimi.
 
-## 3. Kurulum ve Calistirma
+## Proje Klasör Yapısı
 
-### 1. Bagimliliklar
-```bash
-npm install
+Proje, kodun sürdürülebilirliğini ve okunabilirliğini en üst düzeye çıkarmak için modüler bir mimari ile tasarlanmıştır:
+
+*   `/src/app`: Next.js App Router yapısı (Sayfalar, layout'lar ve API uç noktaları).
+*   `/src/components`: Tekrar kullanılabilir UI bileşenleri (Butonlar, Kartlar, Navigation vb.).
+*   `/src/modules`: Sistemin can damarı olan, iş kurallarının modüler olarak ayrıldığı dizin (Katalog, Sepet, Ödeme, Sipariş, Rezervasyon, Admin, Webhook fonksiyonları).
+*   `/src/infrastructure`: Dış servis entegrasyonlarının merkezileştirildiği yapı (Prisma, Stripe, Resend ayarları).
+*   `/src/lib`: Yardımcı fonksiyonlar, sabitler ve projeye ait başlangıç (seed) verileri.
+*   `/src/prisma`: Prisma veritabanı şeması (`schema.prisma`) ve başlangıç verisi ekleme betiği.
+*   `/tests`: Playwright (E2E) ve Vitest (Birim Testleri) dosyaları.
+*   `/public`: HD kalitede optimize edilmiş resimler ve statik dosyalar.
+
+## Kurulum ve Çalıştırma
+
+### Gereksinimler
+*   Node.js (v18 veya daha güncel)
+*   PostgreSQL veritabanı sunucusu
+*   Stripe Hesabı (Ödeme altyapısı ve webhook için)
+*   Resend Hesabı (E-posta gönderimi için)
+
+### Çevresel Değişkenler (Environment Variables)
+Proje ana dizininde bir `.env` dosyası oluşturun ve aşağıdaki değişkenleri kendi sisteminize göre doldurun:
+
+```env
+# Veritabanı
+DATABASE_URL="postgresql://kullanici:sifre@localhost:5432/giyim_magazasi?schema=public"
+
+# NextAuth (Kimlik Doğrulama)
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="guvenli_gizli_bir_anahtar"
+
+# Stripe (Ödeme İşlemleri)
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
+
+# Resend (E-posta İşlemleri)
+RESEND_API_KEY="re_..."
 ```
 
-### 2. Ortam Degiskenleri
-`.env.example` dosyasini `.env` olarak kopyalayip ilgili degerleri girin:
+### Kurulum Adımları
 
-```bash
-cp .env.example .env
-```
+1.  **Bağımlılıkları Yükleyin:**
+    ```bash
+    npm install
+    ```
 
-| Degisken | Aciklama |
-| --- | --- |
-| `DATABASE_URL` | PostgreSQL baglanti adresi |
-| `REDIS_URL` | Redis baglanti adresi (yerel gelistirme icin Memurai / Redis) |
-| `UPSTASH_REDIS_REST_URL` | Prod Redis REST URL (Upstash) |
-| `UPSTASH_REDIS_REST_TOKEN` | Prod Redis REST Token (Upstash) |
-| `STRIPE_SECRET_KEY` | Stripe gizli anahtari (sk_test_...) |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe genel anahtari (pk_test_...) |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook dogrulama anahtari (whsec_...) |
-| `AUTH_SECRET` | NextAuth oturum sifreleme anahtari (npx auth secret) |
-| `AUTH_URL` / `NEXT_PUBLIC_APP_URL` | Uygulama ana adresi (ornegin http://localhost:3000) |
-| `NEXT_PUBLIC_SITE_URL` | SEO kanonik URL adresi |
-| `ALLOWED_ORIGINS` | Guvenli yonlendirme icin izin verilen origin listesi |
-| `CRON_SECRET` | Sure asimi temizleme endpoint'i icin Bearer token |
-| `OPENROUTER_API_KEY` | Fashion Studio servis anahtari |
+2.  **Prisma Client'ı Oluşturun ve Veritabanı Şemasını Senkronize Edin:**
+    ```bash
+    npx prisma generate
+    npx prisma db push
+    ```
 
-### 3. Veri Tabani Kurulumu
-```bash
-npx prisma migrate dev
-npx prisma generate
-npx prisma db seed
-```
+3.  **Örnek Verileri (Ürünler vb.) Veritabanına Yazın (İsteğe Bağlı):**
+    ```bash
+    npx prisma db seed
+    ```
 
-Seed verisi; 5 ana kategori (hoodies, tees, bottoms, footwear, accessories), 11 ornek editoryal urun ve demo yonetici hesabi icerir.
+4.  **Geliştirme Sunucusunu Başlatın:**
+    ```bash
+    npm run dev
+    ```
+    Uygulama `http://localhost:3000` adresinde çalışmaya başlayacaktır.
 
-### 4. Gelistirme Sunucusu
-```bash
-npm run dev
-```
-Uygulama `http://localhost:3000` adresinde calisir.
+## Test Altyapısı
 
-### Demo Hesap
-- **Rol:** Admin
-- **E-posta:** `demo@lastdance.store`
-- **Sifre:** `demo1234`
-- **Panel:** `http://localhost:3000/admin`
+Projenin güvenilirliğini sağlamak adına iki farklı test yaklaşımı benimsenmiştir:
 
----
+*   **Birim Testleri (Vitest):** Projedeki bağımsız fonksiyonların (örneğin sepet hesaplamaları) doğru çalışıp çalışmadığını test eder.
+    ```bash
+    npm run test
+    ```
 
-## 4. Proje Dizin Yapisi
+*   **Uçtan Uca Testler (Playwright - E2E):** Gerçek bir kullanıcının siteye girip, ürünü sepete ekleyip ödeme sayfasına kadar giden tüm alışveriş serüvenini simüle eder ve sistemin bir bütün olarak çökmeden çalıştığını doğrular.
+    ```bash
+    npx playwright test
+    ```
 
-```
-src/
-  app/                       # App Router sayfalari ve API rotalari
-    layout.tsx               # Kok layout (fontlar, metadata, analitik)
-    template.tsx             # Sayfa gecis animasyonlari
-    page.tsx                 # Anasayfa
-    robots.ts / sitemap.ts   # SEO motor yapilandirmalari
-    opengraph-image.tsx      # Dinamik OG kartlari
-    not-found.tsx / error.tsx
-    (storefront)/            # Magaza arayuzu (urunler, koleksiyonlar, search, sepet)
-    (auth)/                  # Giris ve kayit sayfalari
-    (account)/               # Kullanici hesap ve siparis sayfalari
-    admin/                   # Yonetim paneli sayfalari
-    api/                     # REST API ve webhook uclari
-  components/
-    icons.tsx                # Inline SVG ikon bilesenleri
-    layout/                  # Header, Footer
-    ui/                      # ProductCard, Hero, Reveal, EmptyState, Skeleton
-    admin/                   # Admin form ve veri tablolari
-    cart/                    # Sepet senkronizasyon bilesenleri
-    reviews/                 # Yorum listeleme ve ekleme bilesenleri
-  infrastructure/            # Dagitik servis adaptörleri (Prisma, Redis, Stripe, Storage)
-  lib/                       # Yardimci fonksiyonlar, konfigurasyon, formatlayicilar
-  modules/                   # Domain-Driven Core Modulleri
-    catalog/                 # Urun sorgulari, filtreler, tipler
-    cart/                    # Zustand sepet store'u ve senkronizasyon
-    wishlist/                # Favoriler store'u
-    checkout/                # Stok rezervasyonu ve odeme servisi
-    orders/                  # Siparis durumu ve sorgulari
-    admin/                   # Admin metrikleri ve veri islemleri
-    auth/                    # Kimlik dogrulama ve guvenlik
-  prisma/
-    schema.prisma            # Veri modeli tanimlari
-    migrations/              # Veri tabani migrasyon dosyalari
-    seed.ts                  # Baslangic veri yukleyici
-scripts/
-  order-smoke.ts             # Siparis ve stok regresyon testleri
-  webhook-smoke.ts           # Webhook imza ve idempotency testleri
-```
+## Webhook Yapılandırması (Önemli)
 
----
+Stripe üzerinden alınan başarılı ödemeler, stok düşümü ve e-posta gönderimi için webhook'lara güvenir. Webhook dinleyicisi `/api/webhooks/stripe` rotasındadır. Geliştirme aşamasında webhook'ları lokal olarak test etmek için Stripe CLI kullanarak `checkout.session.completed` event'ini lokal sunucunuza yönlendirmeniz gerekmektedir.
 
-## 5. Guvenlik ve Mimari Ilkeler
+## Lisans
 
-- **Yetkilendirme:** Tum admin rotalarinda `requireAdmin()` ve session kontrolleri uygulanir.
-- **Kriptografi:** Sifreler bcrypt (cost 12) ile saklanir, duz metin parola tutulmaz.
-- **Enjeksiyon Korumasi:** Prisma parametrik sorgulari kullanilir; HTML ve script enjeksiyonlarina karsi otomatik cikti kacisi (escape) saglanir.
-- **Guvenlik Basliklari (CSP):** `next.config.ts` uzerinde Strict CSP, HSTS, X-Frame-Options (DENY), X-Content-Type-Options (nosniff) ve Permissions-Policy tanimlidir.
-- **Hiz Sinirlama (Rate Limiting):** Redis tabanli sliding window algoritmasi ile giris, kayit ve odeme istekleri guvenceye alinmistir.
-- **Zamanlama Saldirilari Korumasi:** Olmayan kullanici giris denemelerinde de ayni bcrypt hesaplama maliyeti isletilerek yanit suresi analizine dayali kullanici taramalari engellenir.
-
----
-
-## 6. Test ve Komutlar
-
-```bash
-npm run typecheck    # TypeScript tip kontrolu (tsc --noEmit)
-npm run lint         # ESLint kontrolu
-npm run test         # Siparis ve webhook testlerini calistirir
-npm run test:order   # Stok rezervasyon ve siparis akisi testleri
-npm run test:webhook # Webhook imza ve tekrar (replay) testleri
-npm run build        # Production derlemesi
-npm run analyze      # Paket boyutu analiz raporu olusturur
-```
+Tüm hakları saklıdır. LAST DANCE.
