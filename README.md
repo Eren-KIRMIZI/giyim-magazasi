@@ -1,282 +1,177 @@
-# LAST DANCE — Giyim Mağazası
+# LAST DANCE - Giyim Magazasi
 
-Brutalist tasarımlı, tam yığın (full-stack) e-ticaret mağazası. Next.js 16 App Router, TypeScript, Tailwind CSS v4 üzerine kurulu; PostgreSQL (Prisma 7), Redis (Memurai/Upstash), Auth.js (NextAuth v5), Stripe ve Vercel Analytics entegrasyonlu.
+Brutalist tasarimli, tam yigin (full-stack) e-ticaret platformu. Next.js 16 App Router, TypeScript ve Tailwind CSS v4 uzerine kuruludur; PostgreSQL (Prisma 7), Redis (Memurai / Upstash), Auth.js (NextAuth v5), Stripe Checkout ve Vercel Analytics entegrasyonuna sahiptir.
 
-## Özellikler
+---
+
+## 1. Ozellikler
 
 ### Vitrin
-- **Anasayfa:** hero + yeni gelenler + koleksiyon bölümleri; `Reveal` bileşeni **IntersectionObserver + CSS transition** ile çalışır (`prefers-reduced-motion` destekli); `template.tsx` **GSAP sayfa geçiş animasyonu** (reduced-motion'da kapalı). **Hero:** dikey "Est. 2026 — The Archive" etiketi + kampanya **marquee bandı** ("The Final Drop — Secure the Archive — Campaign 001 …").
-- **Header:** üst duyuru bandı **marquee** animasyonlu ("The Final Drop — Free shipping over €100", hover'da duraklar), sticky + `backdrop-blur` navigasyon, aktif link alt çizgisi, gerçek nav linkleri (New Arrivals / Collections / Newsletter), arama-wishlist-sepet ikonları (inline SVG), sepet/favori rozetleri, **tam ekran mobil menü** (stagger'la beliren dev başlıklar, açıkken body scroll kilidi, tema + arama/favori satırları).
-- **Ürün kartı (editorial redesign):** ürün sırasına göre **"No. 001"** etiketi, ürün **renk numuneleri (swatches)**, hover'da "View Object" + ikinci görsele geçiş, favori kalbi.
-- **Koleksiyonlar:** `/koleksiyonlar` — kategori, beden ve fiyat filtresi; mobilde toggle panel; "Recently Viewed" bölümü; üstte **kampanya bandı** ("Archive // Campaign 001 — The Final Drop").
-- **Arama:** `/search` — server-side arama (`?q=&kategori=&beden=&renk=&fiyatmin=&fiyatmax=&stok=1&sirala=`), ILIKE tabanlı (isim/alt başlık/açıklama), sıralama: newest / price_asc / price_desc / popular (sipariş adedine göre). Filtreler URL'e yazılır (paylaşılabilir, SSR); **aktif filtre çipleri + "Clear all"** (URL'deki her filtreden tek tıkla kaldırma); `/search` noindex; `loading.tsx` iskelet ekranı. Header'daki arama ikonu buraya gider.
-- **Ürün detayı:** `/urunler/[slug]` (SSG, slug tabanlı) — görsel galeri (**ok/klavye geçişi + `01 / 04` sayaç**, minyatürler), beden/renk seçimi (renk swatch'larında press geri bildirimi), varyant bazlı **stok kontrolü** (seçili size+color'a göre; 0 stokta buton disabled + "Sold Out", ≤5 stokta **"Son X adet" uyarısı + kırmızı stok çubuğu**), **Add to Bag + Buy Now** (sepete ekleyip `/sepet`'e yönlendirir), favori butonu, "Complete the Look" önerileri (**aynı kategori öncelikli**), yorumlar, mobilde **sticky add-to-cart barı**. **Editorial bölüm:** `OBJECT / STATUS / SPEC` — object number, kampanya, kumaş/materyal, gramaj, kalıp ve çıkış tarihi (DB'den).
-- **Wishlist (favoriler):** `/begendiklerim` — Zustand + localStorage kalıcılığı; ürün kartlarında kalp, ürün detayında buton, Header'da rozetli kalp + mobil menü linki; **boş durum EmptyState** (ikon + CTA ile).
-- **Dark mode:** `.dark` altında CSS değişkeni override'ları (`globals.css`, `@custom-variant dark`) — token kullanan tüm bileşenler otomatik uyum sağlar; `ThemeToggle` (`useSyncExternalStore` + localStorage + sistem tercihi), layout'ta **no-flash inline script**; footer/duyuru bandı gibi istisnalar `dark:` sınıflarıyla ayarlanır.
-- **Yakın zamanda bakılanlar:** localStorage'da tutulur (max 8), `/koleksiyonlar` altında listelenir.
-- **Sepet:** Zustand + localStorage; **adet üst sınırı stokla clamp'lenir** (varyant `maxQuantity`), girişli kullanıcılarda Redis senkronizasyonu. **UI cilası:** boş sepet EmptyState, sticky özet paneli, **€100 kargo ilerleme çubuğu** ("Free Shipping — €X to go / Unlocked"), checkout butonunda ok + yükleme animasyonu, ürün minyatürlerinde hover zoom, miktar butonlarında press geri bildirimi.
-- **Newsletter:** `/newsletter` sayfası + `/api/newsletter` (e-posta doğrulama, IP bazlı rate limit 5/saat, `NewsletterSubscription` tablosuna upsert, "ACCESS GRANTED" onayı); anasayfa `CollectionsSection` içindeki form da aynı API'yi kullanır.
-- **Bilgi sayfaları:** `/shipping`, `/returns`, `/terms`, `/contact` — footer linkleri; özel **404** (`not-found.tsx`), hata (`error.tsx` + `retry`) ve kök hata (`global-error.tsx`) sayfaları.
-- **İkonlar:** `components/icons.tsx` — tüm ikonlar **inline SVG** (Material Symbols bağımlılığı yok).
-- **Ortak UI:** `components/ui/EmptyState.tsx` (ikon + başlık + açıklama + CTA) ve `components/ui/Skeleton.tsx` — boş/yükleme durumlarında standartlaştırılmış bileşenler.
-- **Etkileşim katmanı (`globals.css`):** `focus-visible` halkası, buton imleci, görsel drag engelleme, kalın scrollbar, `.link-sweep` link animasyonu, `marquee` keyframes.
+- **Anasayfa:** Hero, yeni gelenler ve koleksiyon bolumleri; Reveal bileseni IntersectionObserver ve CSS transition ile calisir (prefers-reduced-motion destekli); template.tsx GSAP sayfa gecis animasyonu icerir. Hero bolumunde dikey arsiv etiketi ve marquee kayan yazi bandi bulunur.
+- **Header:** Ust duyuru bandi marquee animasyonlu, yapiskan (sticky) ve backdrop-blur navigasyon, aktif link cizgisi, gercek navigasyon linkleri (New Arrivals, Collections, Newsletter), arama, favori ve sepet ikonlari, sepet/favori sayac rozetleri, tam ekran mobil menu (body scroll kilidi ve tema gecisi ile).
+- **Urun Karti:** Urun sirasina gore nesne numaralandirma, urun renk numuneleri (swatches), hover durumunda ikinci gorsele yumusak gecis, indirimli fiyat (compareAtPrice) ve cizili fiyat gosterimi, favori butonu.
+- **Koleksiyonlar:** /koleksiyonlar - Kategori, beden, renk ve fiyat filtreleme; mobilde acilir filtre paneli; son incelenen urunler (Recently Viewed) bolumu.
+- **Arama:** /search - Sunucu tarafli arama, ILIKE tabanli filtreleme (isim, alt baslik, aciklama), siralama secenekleri (newest, price_asc, price_desc, popular). Filtreler URL parametrelerine senkronize edilir, aktif filtre cipleri uzerinden tek tikla kaldirilabilir.
+- **Urun Detayi:** /urunler/[slug] (SSG, slug tabanli) - Gorsel galeri (sayac, minyaturler ve klavye/ok gecisi), beden/renk secimi, varyant bazli stok kontrolu (tukenen varyantlarda disabled durumu, kritik stokta adet uyarisi ve dinamik stok cubugu), sepete ekleme ve hemen satin alma (Buy Now), favori butonu, editorial ozellikler tablosu (nesne no, kampanya, kumas, gramaj, kalip, cikis tarihi), dogrulanmis musteri yorumlari bolumu.
+- **Favoriler (Wishlist):** /begendiklerim - Zustand ve localStorage kaliciligi ile urun kartlarinda ve detay sayfasinda favori yonetimi.
+- **Karanlik Mod (Dark Mode):** CSS degiskenleri uzerinden calisan tema yonetimi (ThemeToggle bileseni, useSyncExternalStore, localStorage ve sistem tercihi destegi, sifir parlama saglayan no-flash inline script).
+- **Sepet:** Zustand ve localStorage entegrasyonlu sepet yapisi; urun adetleri stok limitine gore sinirlandirilir; oturum acmis kullanicilarda Redis uzerinden cift yonlu senkronizasyon saglanir; ucretsiz kargo esik cubugu ve hizli odeme yonlendirmesi bulunur.
+- **Bulten (Newsletter):** /newsletter sayfasi ve API rotasi (e-posta formati dogrulama, IP bazli rate limit, veri tabanina kayit).
+- **Bilgi Sayfalari:** /shipping, /returns, /terms, /contact sayfalari; ozel 404 (not-found.tsx), hata yakalama (error.tsx) ve global hata (global-error.tsx) sinirlari.
 
-### Kimlik, hesap ve sipariş
-- **Kimlik doğrulama:** kayıt + giriş (`/giris`), `bcryptjs` hash (cost 12), rol (ADMIN/CUSTOMER) JWT session'da; `session` callback'i rolü **her istekte DB'den taze okur** (admin panelden düşürülen kullanıcı anında yetkisini kaybeder); Redis tabanlı rate limit (**login 10/15dk e-posta+IP bazlı**, kayıt 10/15dk, yorum 10/saat, Redis yokken fail-open). Kayıtta **şifre politikası:** en az 8 karakter + büyük/küçük harf + rakam; mevcut e-posta çakışmasında **enumeration önleyici** genel mesaj döner.
-- **Hesap:** `/hesabim` — sipariş geçmişi; `/hesabim/[orderNumber]` — sipariş detayı (sahibi veya admin).
-- **Yorumlar:** girişli kullanıcı ürün başına bir yorum/puan (upsert, `productId+userId` benzersiz), ortalama puan.
-- **Stripe Checkout (production-safe):** sepet sunucuda doğrulanır, fiyatlar **DB'den okunur ve sipariş kalemlerine snapshot** alınır; checkout'ta varyant bazlı **atomik stok rezervasyonu** (`OrderReservation`). Webhook imza doğrulamalı + idempotent (`stripeSessionId`/`stripePaymentIntentId` benzersiz):
-  - `checkout.session.completed` → Order + kalem snapshot'ları (isim/fiyat/SKU/görsel/beden/renk) oluşturur, rezervasyonu CONSUMED yapar.
-  - `expired` / `async_payment_failed` → stok iade + CANCELLED/FAILED kaydı.
-  - `charge.refunded` → stok geri + REFUNDED (`stockRestored` ile tek sefer).
-  - Sipariş numarası: `LD-2026-XXXXXX` (yıl dinamik, `generateOrderNumber()`). Ürün sonradan silinse bile sipariş kalemleri ayakta kalır.
-  - **Rezervasyon süre aşımı:** her rezervasyona `expiresAt` (24 saat) yazılır; `/api/cron/release-expired` (Vercel Cron, `CRON_SECRET` korumalı) ve checkout öncesi lazy cleanup (`releaseExpiredReservations`) süresi dolan rezervasyonları iade eder — Stripe webhook'u kaçsa/gecikse bile stok kilitlenmez.
+### Kimlik ve Siparis Yonetimi
+- **Kimlik Dogrulama:** Kayit ve giris (/giris), bcryptjs parola hash'leme (cost 12), NextAuth v5 JWT oturum stratejisi; rol kontrolu (ADMIN/CUSTOMER) guvenlik amaciyla her istekte veri tabanindan guncel olarak dogrulanir; Redis tabanli brute-force ve rate limit korumasi (IP ve e-posta bazli).
+- **Hesap Paneli:** /hesabim - Siparis gecmisi listesi ve /hesabim/[orderNumber] uzerinden detayli siparis takibi.
+- **Yorum Sistemi:** Oturum acmis kullanicilar icin urun bazinda puanlama ve yorum yapma (upsert mantigi ile her kullanici urun basina tek yorum girebilir).
+- **Stripe Checkout:** Sepet verisi sunucuda dogrulanir; fiyatlar veri tabanindan okunarak siparis kalemlerine anlik snapshot alinir; checkout asamasinda atomik stok rezervasyonu (OrderReservation) yapilir. Webhook imza dogrulamali ve idempotent calisir:
+  - checkout.session.completed: Siparis ve kalem snapshot'larini olusturur, rezervasyonu tuketildi (CONSUMED) durumuna getirir.
+  - expired / async_payment_failed: Rezervasyon serbest birakilir, stok iade edilir.
+  - charge.refunded: Iade durumunda stok geri yuklenir (stockRestored bayragi ile tekil islem).
+  - Rezervasyon Zaman Asimi: Her rezervasyona 24 saatlik sure taninir; suresi dolan rezervasyonlar cron gorevi (/api/cron/release-expired) veya odeme oncesi kontrol ile otomatik serbest birakilir.
 
-### Admin paneli (`/admin`, sadece ADMIN)
-- **Dashboard:** ürün/sipariş/kullanıcı/kategori sayaçları; toplam + son 30 gün ciro; son 24 saat iptal/fail; aktif rezervasyon; **30 günlük günlük ciro SVG grafiği** (bağımlılıksız); en çok satanlar (adet + ciro); **düşük stok uyarıları (≤5)**; son siparişler.
-- **Ürünler:** CRUD (`/admin/urunler`, oluştur/düzenle) — artı **editorial alanlar** (Object No, Kampanya, Materyal, Gramaj, Kalıp, Çıkış Tarihi), **görsel yükleme** (`/api/admin/upload` — 5MB, jpeg/png/webp/gif/avif; `public/uploads/products/<ts>-<hex>.<ext>`), varyant stok satırları.
-- **Kategoriler:** CRUD (`/admin/kategoriler`); ürünü olan kategori silinemez (409).
-- **Kullanıcılar:** `/admin/kullanicilar` — arama, rol değiştirme, silme (koruma: kendini/son admin'i düşüremez, kendini silemez, sipariş/yorum/sepeti olan kullanıcı silinemez).
-- **Yorumlar:** `/admin/yorumlar` — ürün adıyla arama + silme (moderasyon).
+### Yonetim Paneli (/admin, Sadece ADMIN Rolu)
+- **Gosterge Paneli (Dashboard):** Urun, siparis, kullanici ve kategori sayaclari; toplam ve son 30 gunluk ciro; aktif rezervasyon ve basarisiz islem sayilari; 30 gunluk ciro SVG cizgi grafigi; en cok satanlar; kritik stok uyarilari (5 ve alti); son siparisler tablosu.
+- **Urun Yonetimi:** /admin/urunler - Urun ekleme, duzenleme, silme; editoryal veri alanlari, gorsel yukleme (/api/admin/upload), varyant ve stok tablosu yonetimi.
+- **Kategori Yonetimi:** /admin/kategoriler - Kategori ekleme, guncelleme, silme (urunu bulunan kategori silinemez).
+- **Kullanici Yonetimi:** /admin/kullanicilar - Kullanici arama, rol degistirme ve guvenli silme (admin kendini silemez / dusuremez).
+- **Yorum Moderasyonu:** /admin/yorumlar - Urun yorumlarini inceleme ve moderasyon amacli silme.
+- **Siparis Yonetimi:** /admin/siparisler ve /admin/siparisler/[id] - Siparis filtreleme, detay inceleme ve durum guncelleme (iptal durumunda stok iadesi tetiklenir).
+- **Fashion Studio:** /admin/ai-studio - Gorsel modelleme ve katalog studiyosu entegrasyonu.
 
-### SEO / Büyüme (Phase 4)
-- **Metadata:** `metadataBase` + canonical/OG/twitter; ürün sayfası dinamik `generateMetadata`; home'da Organization, üründe **Product + BreadcrumbList JSON-LD**; `/search` ve kişisel sayfalar noindex.
-- **sitemap.xml** (statik + bilgi sayfaları + tüm ürünler, `updatedAt`) ve **robots.txt** (admin/hesap/sepet/favori/search/api gizli).
-- **OG görselleri:** kök `opengraph-image` (brutalist anasayfa kartı) + ürün sayfası dinamik `opengraph-image` (ad, fiyat, kategori) — `next/og` ImageResponse, `nodejs` runtime.
-- **Analytics:** `@vercel/analytics` (`<Analytics/>` layout'ta); checkout başarısında `track("order_completed")` conversion event'i.
-- **lib/site.ts:** `SITE_URL` (`.env` → `NEXT_PUBLIC_SITE_URL`, yoksa `https://lastdance.store`).
+---
 
-### Performans
-- **ISR:** katalog sayfaları `revalidate` ile önbelleğe alınır (stok/DB güncel kaldıkça yeniden doğrulanır).
-- **Lean Prisma sorguları:** vitrin sorguları yalnızca gerekli alanları seçer (`select`), yorum/sayım sorguları `count`-only.
-- **`next/image` hero:** anasayfa hero görseli optimize edilmiş, `priority`/boyutlandırılmış; hover ikinci görseller `lazy`.
-- **Reduced motion:** tüm animasyonlar (`Reveal`, `template.tsx` geçişi, fly-to-cart) `prefers-reduced-motion: reduce`'da devre dışı.
-- **Bundle analyzer:** `npm run analyze` → `.next/analyze/*.html` raporları (Turbopack uyumsuz olduğundan `--webpack` ile çalışır).
+## 2. Teknolojiler
 
-## Teknolojiler
-
-| Katman | Kullanılan |
+| Katman | Kullanilan Teknolojiler |
 | --- | --- |
 | Framework | Next.js 16 (App Router), React 19, TypeScript |
-| Stil | Tailwind CSS v4, CSS token tabanlı tema, inline SVG ikonlar (`components/icons.tsx`) |
-| Animasyon | GSAP (`template.tsx` sayfa geçişi, fly-to-cart), Lenis (smooth scroll), `Reveal` (IntersectionObserver + CSS) |
-| Veritabanı | PostgreSQL + Prisma 7 (`@prisma/adapter-pg`, `prisma.config.ts`) |
-| Cache / state | Redis (ioredis) — Memurai (yerel) / Upstash (prod) |
-| Auth | Auth.js (next-auth v5 beta) — Credentials + PrismaAdapter, JWT session |
-| Ödeme | Stripe Checkout + webhook ile sipariş oluşturma |
-| State (client) | Zustand (persist) — sepet, favoriler, son bakılanlar |
-| Analytics | `@vercel/analytics` (pageview + özel event) |
-| SEO | Next metadata (OG/twitter/canonical), `sitemap.ts`/`robots.ts`, `next/og` (ImageResponse) |
-| Build analizi | `@next/bundle-analyzer` (`npm run analyze`) |
-| CI | GitHub Actions (`.github/workflows/ci.yml`) — lint, tip, build, test, audit |
+| Stil | Tailwind CSS v4, CSS Token Tabanli Tema, Inline SVG Ikonlar |
+| Animasyon | GSAP, Lenis Smooth Scroll, Reveal (IntersectionObserver) |
+| Veri Tabani | PostgreSQL, Prisma 7 (@prisma/adapter-pg, prisma.config.ts) |
+| Onbellek ve Hiz Sinirlama | Redis (ioredis / Upstash REST API) |
+| Kimlik Dogrulama | Auth.js (NextAuth v5 beta), Credentials Provider, PrismaAdapter |
+| Odeme | Stripe Checkout, Webhook Entegrasyonu, Atomik Stok Yonetimi |
+| Durum Yonetimi (Client) | Zustand (persist middleware) |
+| Analitik ve SEO | @vercel/analytics, Metadata API, JSON-LD, sitemap.ts, robots.ts, next/og |
 
-## Kurulum
+---
 
-### 1. Bağımlılıklar
+## 3. Kurulum ve Calistirma
 
+### 1. Bagimliliklar
 ```bash
 npm install
 ```
 
-### 2. Ortam değişkenleri
-
-`.env.example` dosyasını kopyalayıp doldurun:
+### 2. Ortam Degiskenleri
+`.env.example` dosyasini `.env` olarak kopyalayip ilgili degerleri girin:
 
 ```bash
 cp .env.example .env
 ```
 
-| Değişken | Açıklama |
+| Degisken | Aciklama |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL bağlantı adresi (yerel: `postgresql://postgres:postgres@localhost:5432/giyim_magazasi?schema=public`) |
-| `REDIS_URL` | Redis bağlantı adresi (yerel Memurai: `redis://localhost:6379`; prod Upstash REST değerleri ayrı alanlarda) |
-| `STRIPE_SECRET_KEY` | Stripe `sk_test_...` / `sk_live_...` |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe `pk_test_...` |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook `whsec_...` |
-| `AUTH_SECRET` | `npx auth secret` ile üretilebilir |
-| `AUTH_URL` / `NEXT_PUBLIC_APP_URL` | Uygulama adresi (yerel: `http://localhost:3000`); checkout redirect origin'i |
-| `NEXT_PUBLIC_SITE_URL` | SEO taban URL'i (canonical/OG/sitemap; yoksa `https://lastdance.store`) |
-| `ALLOWED_ORIGINS` | Checkout open-redirect allowlist'i — virgülle ayrılmış ek origin'ler (varsayılan: `NEXT_PUBLIC_APP_URL` + `NEXT_PUBLIC_SITE_URL` + `http://localhost:3000`) |
-| `CRON_SECRET` | Süresi dolan rezervasyon temizliği için Bearer token (`/api/cron/release-expired`) |
-| `OPENROUTER_API_KEY` | AI Fashion Studio görsel üretimi (`google/gemini-2.5-flash-image`) — https://openrouter.ai/settings/keys |
+| `DATABASE_URL` | PostgreSQL baglanti adresi |
+| `REDIS_URL` | Redis baglanti adresi (yerel gelistirme icin Memurai / Redis) |
+| `UPSTASH_REDIS_REST_URL` | Prod Redis REST URL (Upstash) |
+| `UPSTASH_REDIS_REST_TOKEN` | Prod Redis REST Token (Upstash) |
+| `STRIPE_SECRET_KEY` | Stripe gizli anahtari (sk_test_...) |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe genel anahtari (pk_test_...) |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook dogrulama anahtari (whsec_...) |
+| `AUTH_SECRET` | NextAuth oturum sifreleme anahtari (npx auth secret) |
+| `AUTH_URL` / `NEXT_PUBLIC_APP_URL` | Uygulama ana adresi (ornegin http://localhost:3000) |
+| `NEXT_PUBLIC_SITE_URL` | SEO kanonik URL adresi |
+| `ALLOWED_ORIGINS` | Guvenli yonlendirme icin izin verilen origin listesi |
+| `CRON_SECRET` | Sure asimi temizleme endpoint'i icin Bearer token |
+| `OPENROUTER_API_KEY` | Fashion Studio servis anahtari |
 
-> Not: `next.config.ts`'te görsel uzak host yalnızca `lh3.googleusercontent.com` (`/aida-public/**`) için açık. `public/uploads` lokaldir ve `images.remotePatterns` gerektirmez.
-
-### 3. Veritabanı
-
-PostgreSQL'in çalışıyor olması gerekir. Migrasyonlar ve seed:
-
+### 3. Veri Tabani Kurulumu
 ```bash
-npx prisma migrate dev   # ilk denemede takılabilir → iptal edip tekrar çalıştırın
+npx prisma migrate dev
 npx prisma generate
 npx prisma db seed
 ```
 
-`prisma.config.ts` şemayı `src/prisma/schema.prisma`, migrasyonları `src/prisma/migrations` üzerinden yönetir.
+Seed verisi; 5 ana kategori (hoodies, tees, bottoms, footwear, accessories), 11 ornek editoryal urun ve demo yonetici hesabi icerir.
 
-Seed içeriği: **5 kategori** (hoodies, tees, bottoms, footwear, accessories) ve **11 ürün** (editorial alanlar + varyant + görsellerle) + demo admin kullanıcısı.
-
-### 4. Çalıştırma
-
+### 4. Gelistirme Sunucusu
 ```bash
 npm run dev
 ```
+Uygulama `http://localhost:3000` adresinde calisir.
 
-Uygulama [http://localhost:3000](http://localhost:3000) adresinde açılır.
+### Demo Hesap
+- **Rol:** Admin
+- **E-posta:** `demo@lastdance.store`
+- **Sifre:** `demo1234`
+- **Panel:** `http://localhost:3000/admin`
 
-### Demo hesaplar
+---
 
-| Rol | E-posta | Şifre |
-| --- | --- | --- |
-| Admin | `demo@lastdance.store` | `demo1234` |
-
-Admin paneli: [http://localhost:3000/admin](http://localhost:3000/admin)
-
-## Proje yapısı
+## 4. Proje Dizin Yapisi
 
 ```
 src/
-  app/                       # Next.js App Router sayfaları
-    layout.tsx               # Kök layout (fonts, metadataBase, Analytics)
-    template.tsx             # GSAP sayfa geçiş animasyonu
-    page.tsx                 # Anasayfa (metadata + Organization JSON-LD)
-    robots.ts / sitemap.ts   # robots.txt + sitemap.xml
-    opengraph-image.tsx      # Kök OG görseli (ImageResponse)
-    not-found.tsx / error.tsx / global-error.tsx  # 404 + hata sınırları
-    (storefront)/
-      urunler/[slug]/        # Ürün detayı (SSG) + ProductDetail + OG görseli
-      koleksiyonlar/         # Filtreli katalog + Recently Viewed + kampanya bandı
-      search/                # Server-side arama + searchParams + loading
-      sepet/  begendiklerim/ # Sepet + CheckoutNotice / Wishlist
-    (auth)/giris/            # Giriş formu
-    (account)/hesabim/       # Sipariş geçmişi + [orderNumber] detay
-    admin/                   # Yönetim paneli (guard layout, SalesChart)
-      urunler/ (yeni, [id]/duzenle)  kategoriler/  kullanicilar/
-      yorumlar/  siparisler/ ([id])
-    newsletter/ shipping/ returns/ terms/ contact/   # Bilgi sayfaları
-    api/
-      admin/               # categories, orders/[id], products, reviews, upload, users
-      auth/                # NextAuth handler + register
-      cart/sync/  checkout/  newsletter/  reviews/
-      webhooks/stripe/     # Ödeme webhook'u (imza + idempotent)
+  app/                       # App Router sayfalari ve API rotalari
+    layout.tsx               # Kok layout (fontlar, metadata, analitik)
+    template.tsx             # Sayfa gecis animasyonlari
+    page.tsx                 # Anasayfa
+    robots.ts / sitemap.ts   # SEO motor yapilandirmalari
+    opengraph-image.tsx      # Dinamik OG kartlari
+    not-found.tsx / error.tsx
+    (storefront)/            # Magaza arayuzu (urunler, koleksiyonlar, search, sepet)
+    (auth)/                  # Giris ve kayit sayfalari
+    (account)/               # Kullanici hesap ve siparis sayfalari
+    admin/                   # Yonetim paneli sayfalari
+    api/                     # REST API ve webhook uclari
   components/
-    icons.tsx              # İnline SVG ikonlar (Material Symbols yok)
-    layout/  (Header, Footer)   ui/  (Hero, ProductCard, Reveal, ...)
-    admin/  cart/  providers/  reviews/
-  lib/                     # Ortak yardımcılar (data, flyToCart, site, utils)
-  modules/                 # Domain modülleri
-    catalog/   (types, queries, recommendations, client, recently-viewed-store)
-    cart/      (store, sync)   wishlist/ (store)   reviews/
-    checkout/  (service, reservation, webhooks)    orders/ (order, queries)
-    admin/     (dashboard, products, orders, categories, users, reviews)
-    auth/      (config, guards)
-  infrastructure/          # Dış servis bağlantıları (global singleton)
-    prisma/  redis/  (rate-limit)  stripe/  storage/
+    icons.tsx                # Inline SVG ikon bilesenleri
+    layout/                  # Header, Footer
+    ui/                      # ProductCard, Hero, Reveal, EmptyState, Skeleton
+    admin/                   # Admin form ve veri tablolari
+    cart/                    # Sepet senkronizasyon bilesenleri
+    reviews/                 # Yorum listeleme ve ekleme bilesenleri
+  infrastructure/            # Dagitik servis adaptörleri (Prisma, Redis, Stripe, Storage)
+  lib/                       # Yardimci fonksiyonlar, konfigurasyon, formatlayicilar
+  modules/                   # Domain-Driven Core Modulleri
+    catalog/                 # Urun sorgulari, filtreler, tipler
+    cart/                    # Zustand sepet store'u ve senkronizasyon
+    wishlist/                # Favoriler store'u
+    checkout/                # Stok rezervasyonu ve odeme servisi
+    orders/                  # Siparis durumu ve sorgulari
+    admin/                   # Admin metrikleri ve veri islemleri
+    auth/                    # Kimlik dogrulama ve guvenlik
   prisma/
-    schema.prisma          # Veri modeli
-    migrations/            # (1) init → (…) → product_editorial_fields
-    seed.ts                # Örnek veriler + demo admin
+    schema.prisma            # Veri modeli tanimlari
+    migrations/              # Veri tabani migrasyon dosyalari
+    seed.ts                  # Baslangic veri yukleyici
 scripts/
-  order-smoke.ts           # Stok/sipariş regresyon testleri
-  webhook-smoke.ts         # Webhook imza + idempotency testleri
-public/uploads/products/   # Admin görsel upload'ları (gitignore'lu)
+  order-smoke.ts             # Siparis ve stok regresyon testleri
+  webhook-smoke.ts           # Webhook imza ve idempotency testleri
 ```
 
-## Veri modeli (Prisma)
+---
 
-- `User` — hesap, rol (ADMIN/CUSTOMER), bcrypt parola hash'i
-- `Account` / `Session` / `VerificationToken` — Auth.js adaptör tabloları
-- `Category` / `Product` / `ProductImage` / `ProductVariant` — katalog; varyant `productId+size+color` benzersiz, `sku` benzersiz. Product'ta **editorial alanlar:** `objectNumber` (LD-001…), `campaign`, `material`, `weight`, `fit`, `releaseDate`
-- `Order` / `OrderItem` — siparişler; `orderNumber` + `stripeSessionId` + `stripePaymentIntentId` benzersiz; kalemlerde ürün adı/fiyat/SKU/görsel snapshot'ı; `stockConsumed`/`stockRestored` bayrakları
-- `OrderReservation` — checkout'ta rezerve edilen stok kaydı (ACTIVE → CONSUMED/RELEASED); `expiresAt` (24 saat) üzerinden cron/lazy cleanup ile süresi dolan rezervasyonlar iade edilir; webhook buradan siparişi kurar
-- `Cart` / `CartItem` — DB sepet şeması (aktif senkronizasyon Redis üzerinden)
-- `Review` — `productId+userId` benzersiz (kullanıcı ürün başına bir yorum)
-- `NewsletterSubscription` — abonelik e-postaları (`email` benzersiz, upsert)
+## 5. Guvenlik ve Mimari Ilkeler
 
-Ürün durumu: `ACTIVE` | `DRAFT` | `SOLD_OUT`; rozetler: `NEW` | `LIMITED` | `SOLD OUT` (toplam varyant stoku 0 olduğunda otomatik SOLD OUT). Sipariş durumu: `PENDING` | `PAID` | `SHIPPED` | `DELIVERED` | `CANCELLED` | `REFUNDED` | `FAILED`.
+- **Yetkilendirme:** Tum admin rotalarinda `requireAdmin()` ve session kontrolleri uygulanir.
+- **Kriptografi:** Sifreler bcrypt (cost 12) ile saklanir, duz metin parola tutulmaz.
+- **Enjeksiyon Korumasi:** Prisma parametrik sorgulari kullanilir; HTML ve script enjeksiyonlarina karsi otomatik cikti kacisi (escape) saglanir.
+- **Guvenlik Basliklari (CSP):** `next.config.ts` uzerinde Strict CSP, HSTS, X-Frame-Options (DENY), X-Content-Type-Options (nosniff) ve Permissions-Policy tanimlidir.
+- **Hiz Sinirlama (Rate Limiting):** Redis tabanli sliding window algoritmasi ile giris, kayit ve odeme istekleri guvenceye alinmistir.
+- **Zamanlama Saldirilari Korumasi:** Olmayan kullanici giris denemelerinde de ayni bcrypt hesaplama maliyeti isletilerek yanit suresi analizine dayali kullanici taramalari engellenir.
 
-## API Route'ları
+---
 
-| Metot | Yol | Açıklama |
-| --- | --- | --- |
-| GET/POST | `/api/cart/sync` | Redis sepetini oku/yaz (girişli) |
-| GET/POST | `/api/reviews` | Ürün yorumları; POST girişli + rate limit |
-| POST | `/api/newsletter` | E-posta aboneliği (doğrulama + rate limit 5/saat + upsert) |
-| POST | `/api/checkout` | Stripe Checkout oturumu + stok rezervasyonu |
-| POST | `/api/webhooks/stripe` | Webhook (imza doğrulamalı, idempotent) → Order/refund |
-| POST | `/api/auth/register` | Kayıt (rate limit) |
-| GET | `/api/cron/release-expired` | Süresi dolan rezervasyonları iade eder (cron, `CRON_SECRET` Bearer) |
-| GET/POST | `/api/auth/[...nextauth]` | Auth.js handler'ı |
-| POST | `/api/admin/products` | Ürün oluştur (ADMIN) |
-| PUT/DELETE | `/api/admin/products/[id]` | Ürün güncelle/sil (ADMIN) |
-| PATCH | `/api/admin/orders/[id]` | Sipariş durumu (ADMIN; iptal/iadede stok geri yüklenir) |
-| GET/POST | `/api/admin/categories` · PUT/DELETE `/[id]` | Kategori CRUD (ADMIN) |
-| GET | `/api/admin/users` · PATCH/DELETE `/[id]` | Kullanıcı arama/rol/silme (ADMIN, guard'lı) |
-| GET | `/api/admin/reviews` · DELETE `/[id]` | Yorum moderasyonu (ADMIN) |
-| POST | `/api/admin/upload` | Görsel yükleme (ADMIN; 5MB, mime whitelist) |
-| POST | `/api/admin/ai-fashion/generate` | AI model çekimi üret (ADMIN; multipart, OpenRouter/Nano Banana) |
-| POST | `/api/admin/ai-fashion/save` | Üretilen görselleri ürün galerisine ekler (ADMIN; `ProductImage`) |
-
-## CI/CD
-
-`.github/workflows/ci.yml` — `main`/`master` push ve tüm PR'larda: `npm ci`, Prisma generate + `migrate deploy` (Postgres 16 + Redis 7 servisleri), TypeScript kontrolü, ESLint, production build, `npm test` ve `npm audit --omit=dev`. Deploy Vercel git entegrasyonuyla ayrıca yapılır.
-
-## Test
+## 6. Test ve Komutlar
 
 ```bash
-npm test                    # tümü
-npm run test:order          # stok rezervasyonu/iade, sipariş oluşturma, snapshot,
-                            # idempotency, durum geçişleri (canlı DB üzerinde)
-npm run test:webhook        # webhook imza doğrulama (eksik/bozuk→400, secretsız→500),
-                            # expired/completed/refunded akışları + replay idempotency
+npm run typecheck    # TypeScript tip kontrolu (tsc --noEmit)
+npm run lint         # ESLint kontrolu
+npm run test         # Siparis ve webhook testlerini calistirir
+npm run test:order   # Stok rezervasyon ve siparis akisi testleri
+npm run test:webhook # Webhook imza ve tekrar (replay) testleri
+npm run build        # Production derlemesi
+npm run analyze      # Paket boyutu analiz raporu olusturur
 ```
-
-## Güvenlik (OWASP Top 10)
-
-| Alan | Durum |
-| --- | --- |
-| A01 Yetkilendirme | Tüm admin API'lerinde `requireAdmin()`; hesap sipariş detayı sahiplik/ADMIN kontrolü; sepet Redis key'i kullanıcıya bağlı |
-| A02 Kriptografi | bcrypt cost 12, JWT `AUTH_SECRET`, düz metin şifre yok |
-| A03 Enjeksiyon | Prisma parametrik sorgular (raw SQL yok); React otomatik escape; JSON-LD `<script>`'ler `serializeJsonLd()` ile escape edilir |
-| A04 Tasarım | Rezervasyon expiry (`expiresAt` + cron + lazy cleanup); rate limitler aktif |
-| A05 Yanlış yapılandırma | `next.config.ts` güvenlik başlıkları: **CSP** (script-src 'self' + va.vercel-scripts.com, frame-ancestors 'none', base-uri 'self', object-src 'none'), **HSTS** (2 yıl + preload), X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy |
-| A06 Bileşenler | `npm audit --omit=dev` → 0 vulnerability |
-| A07 Kimlik doğrulama | Login brute-force koruması (10 deneme/15dk e-posta+IP); kayıt enumeration önlemi; güçlü şifre politikası; taze rol |
-| A08 Bütünlük | Webhook imza doğrulaması + idempotency; fiyat snapshot'ları; amount-mismatch kontrolü; package-lock |
-| A09 Loglama/izleme | Yapılandırılmış güvenlik logları (`lib/logger.ts` `[security]` JSON): login başarısız/rate-limited, admin rol değişimi, kullanıcı silme, ürün silme, sipariş durumu değişimi |
-| A10 SSRF | Server-side kullanıcı URL fetch'i yok; `next/image` yalnızca `lh3.googleusercontent.com/aida-public/**`; OG ImageResponse fetch içermiyor |
-
-CSP, ISR/statik sayfaları korumak için nonce'siz kuruldu (Next 16 dokümanındaki önerilen yöntem); `script-src 'unsafe-inline'` JSON-LD ve Next.js bootstrap script'leri için gereklidir, JSON-LD escape'i ile XSS riski kapatılır. `va.vercel-scripts.com` Vercel Analytics için izinlidir.
-
-## Scriptler
-
-```bash
-npm run dev       # geliştirme sunucusu
-npm run build     # production build
-npm run start     # build sonrası sunucu
-npm run analyze   # bundle analizi → .next/analyze/*.html (--webpack)
-npm run lint      # ESLint
-npm test          # order + webhook regresyon testleri
-npx prisma db seed   # veritabanını örnek veriyle doldurur
-```
-
-## Prod (Vercel) notları
-
-- `DATABASE_URL` → hosted PostgreSQL (ör. Neon/Supabase); `prisma migrate deploy` uygulanır.
-- Redis → Upstash (Redis URL / REST değişkenleri). Yerel Memurai yalnızca geliştirme içindir.
-- Stripe: canlı key'ler + endpoint/webhook secret; webhook URL'si prod adresine ayarlanmalıdır. `STRIPE_WEBHOOK_SECRET` boş/placeholder iken webhook 500 döner.
-- `AUTH_SECRET` prod ortamına ayrı ve güvenli bir değerle tanımlanmalıdır.
-- `NEXT_PUBLIC_SITE_URL` prod domain'ine ayarlanmalıdır (canonical/OG/sitemap/robots).
-- **Vercel Cron:** `https://<domain>/api/cron/release-expired` her gün `Authorization: Bearer $CRON_SECRET` ile çalıştırılmalı (cron saati günde bir yeterli; checkout öncesi lazy cleanup zaten ikinci katman). `CRON_SECRET` her ortamda benzersiz ve uzun olmalıdır.
-- **Görsel upload kalıcı değildir:** yüklemeler `public/uploads/` içine yazılır; Vercel serverless ortamında ephemeral'dir. Prod'ta CDN/object storage'a (ör. Cloudinary/UploadThing) geçilmeli — `/api/admin/upload` API yüzeyi (POST → `{ url }`) aynı kalacak şekilde değiştirilebilir.
-- Analytics: `@vercel/analytics` Vercel'de otomatik devreye girer; yerel geliştirmede no-op'dur.
-
-## Bilinen sınırlamalar / notlar
-
-- Stripe key'leri `.env`'de placeholder (`pk_test_xxx`, `sk_test_xxx`, `whsec_xxx`) — gerçek key gelene kadar checkout/webhook 500 döner. Webhook testleri secret'ı test içinde geçici olarak override eder (canlı DB'ye bağımlı değildir).
-- Stripe Checkout üzerinden gönderim adresi toplanmaz (`shippingAddress` şemada durur).
-- Arama `ILIKE` (contains) ile yapılır; katalog büyüdükçe PostgreSQL `pg_trgm`/full-text'e geçiş önerilir.
-- Görsel upload yalnızca ADMIN; dosya adı benzersiz (`<timestamp>-<hex>`), mime whitelist + 5MB limit. Prod'ta kalıcı depolama gerekir (yukarıya bakın).
-- `next/og` ürün OG görseli `nodejs` runtime kullanır (Edge runtime deprecated uyarısı veriyordu).
-- `npm run build` sonrası aynı `.next` ile `npm run dev` başlatmak `/api/auth/csrf` 404 bozulmasına yol açabiliyor; bu durumda `.next` silinip dev yeniden başlatılmalıdır.
-- Statik tasarım verileri (`hero`, koleksiyon etiketleri, ürün görselleri/metinleri) `lib/data.ts`'ten gelir ve seed buradan beslenir; katalog okuma akışı (`modules/catalog/queries.ts`) tamamen DB'den okur.
