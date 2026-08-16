@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-08-16T22:02:56.063Z",
+  "passed": 2,
+  "failed": 1,
+  "total": 3,
+  "results": [
+    {
+      "name": "FAL_KEY tanımlı ve formatı doğru",
+      "status": "PASS",
+      "duration": 0,
+      "info": "Key bulundu: d9309b2c-ae64-... (69 karakter)"
+    },
+    {
+      "name": "fal.ai API erişilebilir (model meta endpoint)",
+      "status": "PASS",
+      "duration": 682,
+      "info": "API erişilebilir (HTTP 403): {\"detail\":\"User is locked. Reason: TOP_UP.\"}"
+    },
+    {
+      "name": "fal.ai FLUX.1 Dev — e-ticaret moda görseli üretimi",
+      "status": "FAIL",
+      "duration": 553,
+      "error": "HTTP 403: {\"detail\":\"User is locked. Reason: TOP_UP.\"}"
+    }
+  ]
+}

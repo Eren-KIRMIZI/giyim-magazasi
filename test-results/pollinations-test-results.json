@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-08-16T22:18:38.697Z",
+  "passed": 5,
+  "failed": 0,
+  "total": 5,
+  "outputDir": "C:\\Users\\Eren\\giyim-magazasi\\test-results\\pollinations",
+  "results": [
+    {
+      "name": "Pollinations.ai erişilebilir (FLUX ping)",
+      "status": "PASS",
+      "duration": 613,
+      "info": "API erişilebilir — yanıt 1663 byte"
+    },
+    {
+      "name": "Moda görseli — Ön (front) açısı",
+      "status": "PASS",
+      "duration": 1846,
+      "info": "28.984 byte → 01-front.jpg"
+    },
+    {
+      "name": "Moda görseli — Arka (back) açısı",
+      "status": "PASS",
+      "duration": 42149,
+      "info": "25.776 byte → 02-back.jpg"
+    },
+    {
+      "name": "Moda görseli — Sol (left) açısı",
+      "status": "PASS",
+      "duration": 41942,
+      "info": "23.133 byte → 03-left.jpg"
+    },
+    {
+      "name": "Moda görseli — Sağ (right) açısı",
+      "status": "PASS",
+      "duration": 41942,
+      "info": "27.840 byte → 04-right.jpg"
+    }
+  ]
+}

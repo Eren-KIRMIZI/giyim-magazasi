@@ -68,12 +68,14 @@ export async function POST(request: Request) {
   };
 
   try {
+    const customPrompt = String(formData.get("customPrompt") ?? "").trim() || undefined;
     const resolved = await Promise.all(references.map((r) => resolveReference(r)));
     const results = await generateProductViews({
       product: productContextFromProduct(product),
       attributes,
       references: resolved,
       views,
+      customPrompt,
     });
 
     const failed = results.filter((r) => !r.ok);

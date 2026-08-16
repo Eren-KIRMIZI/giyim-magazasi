@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-08-16T22:01:48.684Z",
+  "passed": 6,
+  "failed": 0,
+  "skipped": 1,
+  "total": 7,
+  "results": [
+    {
+      "name": "OPENROUTER_API_KEY tanımlı ve formatı doğru",
+      "status": "PASS",
+      "duration": 0,
+      "info": "Key bulundu: sk-or-v1-2e2be... (73 karakter)"
+    },
+    {
+      "name": "OpenRouter API erişimi — key geçerliliği",
+      "status": "PASS",
+      "duration": 540,
+      "info": "Key geçerli — label: \"sk-or-v1-2e2...efe\", limit: ?, usage: 0"
+    },
+    {
+      "name": "Gemini görsel modeli OpenRouter katalogunda mevcut",
+      "status": "PASS",
+      "duration": 72,
+      "info": "Model bulundu: google/gemini-2.5-flash-image (context: 32768)"
+    },
+    {
+      "name": "buildPrompt() — doğru metin üretiyor",
+      "status": "PASS",
+      "duration": 0,
+      "info": "Prompt üretildi (559 karakter)"
+    },
+    {
+      "name": "resolveReference() — geçerli PNG data URL kabul ediyor",
+      "status": "PASS",
+      "duration": 0,
+      "info": "Data URL geçerli — decoded boyut: 70 byte"
+    },
+    {
+      "name": "resolveReference() — geçersiz input hata fırlatıyor",
+      "status": "PASS",
+      "duration": 0,
+      "info": "Geçersiz inputlar doğru şekilde reddediliyor"
+    },
+    {
+      "name": "OpenRouter görsel API — gerçek üretim isteği (1x1 referans)",
+      "status": "SKIP",
+      "duration": 59,
+      "info": "OpenRouter kredisi yok — https://openrouter.ai/settings/credits adresinden yükleyin"
+    }
+  ]
+}

@@ -1,11 +1,17 @@
 // AI Fashion Studio servisi — referans çözümleme, görsel üretimi, disk + DB kaydı.
+//
+// Sağlayıcı seçimi: AI_PROVIDER env değişkeniyle belirlenir.
+//   AI_PROVIDER=fal        → fal.ai + FLUX.1 Dev  (varsayılan)
+//   AI_PROVIDER=openrouter → OpenRouter + Gemini 2.5 Flash Image
 
 import { randomBytes } from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { prisma } from "@/infrastructure/prisma";
 import { buildPrompt } from "./prompts";
-import { generateImage } from "./openrouter";
+import { generateImage as generateImageFal } from "./fal";
+import { generateImage as generateImageOpenRouter } from "./openrouter";
+import { generateImage as generateImagePollinations } from "./pollinations";
 import {
   AI_VIEWS,
   type AIStudioProduct,
@@ -15,7 +21,17 @@ import {
   type ProductContext,
 } from "./types";
 
-const MAX_REF_SIZE = 5 * 1024 * 1024; // 5MB — OpenRouter girdi limitine yakın
+const MAX_REF_SIZE = 5 * 1024 * 1024; // 5MB
+
+/** Aktif sağlayıcıya göre görsel üretir. AI_PROVIDER=fal|openrouter|pollinations */
+function generateImage(
+  options: Parameters<typeof generateImageFal>[0]
+): Promise<Buffer> {
+  const provider = (process.env.AI_PROVIDER ?? "fal").toLowerCase();
+  if (provider === "openrouter") return generateImageOpenRouter(options);
+  if (provider === "pollinations") return generateImagePollinations(options);
+  return generateImageFal(options);
+}
 
 function isPng(buffer: Buffer): boolean {
   return buffer.length > 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
@@ -120,6 +136,7 @@ export async function generateProductViews(opts: {
   attributes: ModelAttributes;
   references: string[]; // data URL'ler (en fazla 3)
   views: AIView[];
+  customPrompt?: string; // varsa buildPrompt() yerine kullanılır
 }): Promise<GeneratedView[]> {
   const refs = opts.references.slice(0, 3);
   if (refs.length === 0) {
@@ -128,7 +145,8 @@ export async function generateProductViews(opts: {
 
   const settled = await Promise.allSettled(
     opts.views.map(async (view) => {
-      const prompt = buildPrompt(opts.product, opts.attributes, view);
+      const prompt =
+        opts.customPrompt?.trim() || buildPrompt(opts.product, opts.attributes, view);
       const buffer = await generateImage({ prompt, references: refs });
       const url = await saveGeneratedFile(buffer, opts.product.id, view);
       return { view, url };
@@ -148,6 +166,7 @@ export async function generateProductViews(opts: {
     };
   });
 }
+
 
 export async function getAIStudioProducts(): Promise<AIStudioProduct[]> {
   const products = await prisma.product.findMany({

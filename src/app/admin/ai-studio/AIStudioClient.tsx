@@ -56,8 +56,41 @@ export default function AIStudioClient({
   const [regeneratingView, setRegeneratingView] = useState<AIView | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  // Prompt editörü
+  const [promptMode, setPromptMode] = useState<"auto" | "custom">("auto");
+  const [customPromptText, setCustomPromptText] = useState("");
+  const [showPromptPanel, setShowPromptPanel] = useState(false);
 
   const product = products.find((p) => p.id === productId) ?? null;
+
+  // Client-side prompt builder (service.ts'deki buildPrompt ile aynı mantık)
+  const VIEW_ANGLE: Record<AIView, string> = {
+    front: "front",
+    left: "left side (90 degrees)",
+    right: "right side (90 degrees)",
+    back: "back",
+  };
+
+  function buildLivePrompt(view: AIView = "front"): string {
+    if (!product) return "";
+    const detailLines = [
+      product.objectNumber ? `Object number: ${product.objectNumber}.` : "",
+      product.campaign ? `Campaign: ${product.campaign}.` : "",
+      product.material ? `Material: ${product.material}.` : "",
+      product.weight ? `Fabric weight: ${product.weight}.` : "",
+      product.fit ? `Fit: ${product.fit}.` : "",
+      product.description ? `Design notes: ${product.description}` : "",
+    ].filter(Boolean);
+    return [
+      "Professional e-commerce fashion photograph, full body shot, sharp focus, high detail.",
+      `Garment: "${product.name}". ${detailLines.join(" ")}`,
+      `Model: ${attributes.gender}, ${attributes.age} years old, ${attributes.heightCm} cm tall, ${attributes.bodyType} build, ${attributes.skinTone} skin tone, ${attributes.hair} hair.`,
+      `View: model photographed from the ${VIEW_ANGLE[view]}, whole body visible.`,
+      `Background: ${attributes.background} backdrop, clean.`,
+      `Style: ${attributes.style}, dramatic natural lighting, editorial photography.`,
+      "Requirements: keep the garment design, cut, color, graphics and proportions identical to the reference. The same person, same face, same hairstyle, same body type in every image. Realistic proportions, photorealistic.",
+    ].join(" ");
+  }
 
   const handleProductChange = (value: string) => {
     setProductId(value);
@@ -109,6 +142,10 @@ export default function AIStudioClient({
     fd.append("hair", attributes.hair);
     fd.append("background", attributes.background);
     fd.append("style", attributes.style);
+    // Özel prompt varsa gönder
+    if (promptMode === "custom" && customPromptText.trim()) {
+      fd.append("customPrompt", customPromptText.trim());
+    }
 
     try {
       const res = await fetch("/api/admin/ai-fashion/generate", {
@@ -411,13 +448,123 @@ export default function AIStudioClient({
               </div>
             </div>
 
+            {/* ── Prompt Editörü ───────────────────────────────────────── */}
+            <div className="flex flex-col gap-2 border border-on-surface">
+              {/* Başlık + toggle */}
+              <div className="flex items-center justify-between px-3 pt-3">
+                <span className={LABEL_CLS}>
+                  Prompt{" "}
+                  {promptMode === "custom" && (
+                    <span className="text-primary">[ÖZELLEŞTİRİLMİŞ]</span>
+                  )}
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowPromptPanel((v) => !v)}
+                    className="font-label-mono text-label-mono uppercase border border-on-surface px-3 py-1 hover:bg-surface-variant transition-colors"
+                  >
+                    {showPromptPanel ? "Gizle" : "Göster / Düzenle"}
+                  </button>
+                  {promptMode === "custom" && (
+                    <button
+                      type="button"
+                      onClick={() => { setPromptMode("auto"); setCustomPromptText(""); }}
+                      className="font-label-mono text-label-mono uppercase border border-on-surface px-3 py-1 hover:bg-on-surface hover:text-surface transition-colors"
+                    >
+                      Sıfırla
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {showPromptPanel && (
+                <div className="flex flex-col gap-2 px-3 pb-3">
+                  {/* Mod seçimi */}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPromptMode("auto")}
+                      className={`font-label-mono text-label-mono uppercase px-3 py-1 border transition-colors ${
+                        promptMode === "auto"
+                          ? "bg-on-surface text-surface border-on-surface"
+                          : "border-on-surface text-on-surface-variant hover:bg-surface-variant"
+                      }`}
+                    >
+                      ⚙ Otomatik
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPromptMode("custom");
+                        if (!customPromptText) setCustomPromptText(buildLivePrompt("front"));
+                      }}
+                      className={`font-label-mono text-label-mono uppercase px-3 py-1 border transition-colors ${
+                        promptMode === "custom"
+                          ? "bg-on-surface text-surface border-on-surface"
+                          : "border-on-surface text-on-surface-variant hover:bg-surface-variant"
+                      }`}
+                    >
+                      ✏ Özel
+                    </button>
+                  </div>
+
+                  {promptMode === "auto" ? (
+                    /* Canlı önizleme — ön açı örneği */
+                    <div className="flex flex-col gap-1">
+                      <span className="font-label-mono text-label-mono uppercase text-on-surface-variant text-xs">
+                        Örnek (ön açı) — her açı otomatik güncellenir:
+                      </span>
+                      <p className="font-mono text-xs text-on-surface-variant bg-surface-container p-2 leading-relaxed whitespace-pre-wrap break-words">
+                        {buildLivePrompt("front") || "(ürün seç)"}
+                      </p>
+                    </div>
+                  ) : (
+                    /* Düzenlenebilir textarea */
+                    <div className="flex flex-col gap-1">
+                      <span className="font-label-mono text-label-mono uppercase text-on-surface-variant text-xs">
+                        Tüm açılar bu prompt ile üretilir:
+                      </span>
+                      <textarea
+                        value={customPromptText}
+                        onChange={(e) => setCustomPromptText(e.target.value)}
+                        rows={8}
+                        className="w-full bg-surface border border-primary px-3 py-2 font-mono text-xs text-on-surface focus:outline-none resize-y leading-relaxed"
+                        placeholder="Kendi promptunu buraya yaz..."
+                      />
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => setCustomPromptText(buildLivePrompt("front"))}
+                          className="font-label-mono text-label-mono uppercase border border-on-surface px-3 py-1 text-xs hover:bg-surface-variant transition-colors"
+                        >
+                          Form Değerlerinden Doldur
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCustomPromptText("")}
+                          className="font-label-mono text-label-mono uppercase border border-on-surface px-3 py-1 text-xs hover:bg-on-surface hover:text-surface transition-colors"
+                        >
+                          Temizle
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <button
               type="button"
               onClick={() => submitGenerate(AI_VIEWS.map((v) => v.id))}
               disabled={generating}
               className="bg-on-surface text-surface font-headline-md text-headline-md uppercase px-6 py-3 hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-50"
             >
-              {generating ? "Üretiliyor..." : "Generate"}
+              {generating
+                ? "Üretiliyor..."
+                : promptMode === "custom"
+                ? "Generate (Özel Prompt)"
+                : "Generate"}
             </button>
           </div>
 
