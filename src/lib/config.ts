@@ -40,6 +40,13 @@ export const COLOR_HEX: Record<string, string> = {
   Black: "#1b1c1c",
   White: "#faf9f9",
   Red: "#dc2626",
+  Grey: "#6b7280",
+  Charcoal: "#374151",
+  Olive: "#4d5b44",
+  Navy: "#1e3a8a",
+  Beige: "#d4c5b9",
+  Cream: "#f5f5dc",
+  Brown: "#78350f",
 };
 
 export const FILTER_COLORS: { name: string; hex: string }[] = Object.entries(

@@ -242,8 +242,24 @@ export default function ProductDetail({
             <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg uppercase leading-none mb-stack-sm tracking-tight">
               {product.name}
             </h1>
-            <div className="inline-block bg-on-surface text-surface font-label-mono text-label-mono px-3 py-1 mb-stack-md">
-              {formatPrice(product.price)}
+            <div className="flex items-center gap-2 mb-stack-md">
+              <div className={`inline-block font-label-mono text-label-mono px-3 py-1 ${
+                product.compareAtPrice && product.compareAtPrice > product.price
+                  ? "bg-error text-on-error"
+                  : "bg-on-surface text-surface"
+              }`}>
+                {formatPrice(product.price)}
+              </div>
+              {product.compareAtPrice && product.compareAtPrice > product.price && (
+                <>
+                  <span className="font-label-mono text-label-mono line-through text-on-surface-variant">
+                    {formatPrice(product.compareAtPrice)}
+                  </span>
+                  <span className="font-label-mono text-label-mono text-error uppercase">
+                    %{Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)} İNDİRİM
+                  </span>
+                </>
+              )}
             </div>
             <p className="font-body-lg text-body-lg text-on-surface-variant mb-stack-md">
               {product.description}

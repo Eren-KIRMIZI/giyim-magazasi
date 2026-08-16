@@ -21,6 +21,7 @@ export interface Product {
   subtitle: string;
   description?: string;
   price: number;
+  compareAtPrice?: number | null;
   category: string;
   categoryLabel: string;
   badge?: "NEW" | "LIMITED" | "SOLD OUT";

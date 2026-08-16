@@ -146,9 +146,20 @@ export default function ProductCard({
               </span>
             </div>
           )}
-          <span className="bg-on-surface text-surface font-label-mono text-label-mono px-2 py-1 flex-shrink-0 transition-colors duration-300 group-hover:bg-primary">
-            {formatPrice(product.price)}
-          </span>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {product.compareAtPrice && product.compareAtPrice > product.price && (
+              <span className="font-label-mono text-label-mono line-through text-on-surface-variant">
+                {formatPrice(product.compareAtPrice)}
+              </span>
+            )}
+            <span className={`font-label-mono text-label-mono px-2 py-1 flex-shrink-0 transition-colors duration-300 ${
+              product.compareAtPrice && product.compareAtPrice > product.price
+                ? "bg-error text-on-error group-hover:bg-primary group-hover:text-on-primary"
+                : "bg-on-surface text-surface group-hover:bg-primary"
+            }`}>
+              {formatPrice(product.price)}
+            </span>
+          </div>
         </div>
       </Link>
     </div>
