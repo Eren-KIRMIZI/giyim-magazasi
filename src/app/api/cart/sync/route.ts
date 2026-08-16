@@ -3,9 +3,30 @@ import { auth } from "@/modules/auth";
 import { redis } from "@/infrastructure/redis";
 
 const TTL_SECONDS = 30 * 24 * 60 * 60;
+const MAX_ITEMS = 100;
 
 function cartKey(userId: string) {
   return `cart:${userId}`;
+}
+
+function isValidCartItem(item: unknown): boolean {
+  if (!item || typeof item !== "object") return false;
+  const it = item as Record<string, unknown>;
+  const validString = (v: unknown, max: number) =>
+    typeof v === "string" && v.length > 0 && v.length <= max;
+  const validNumber = (v: unknown, min: number, max: number) =>
+    typeof v === "number" && Number.isFinite(v) && v >= min && v <= max;
+
+  return (
+    validString(it.productId, 100) &&
+    validString(it.slug, 200) &&
+    validString(it.name, 200) &&
+    validNumber(it.price, 0, 1_000_000) &&
+    validString(it.size, 20) &&
+    (it.color === undefined || validString(it.color, 50)) &&
+    validNumber(it.quantity, 1, 99) &&
+    (it.maxQuantity === undefined || validNumber(it.maxQuantity, 0, 999))
+  );
 }
 
 export async function GET() {
@@ -37,8 +58,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  if (!Array.isArray(items)) {
-    return NextResponse.json({ error: "items must be an array" }, { status: 400 });
+  if (!Array.isArray(items) || items.length > MAX_ITEMS) {
+    return NextResponse.json(
+      { error: "items must be an array (max 100)" },
+      { status: 400 }
+    );
+  }
+
+  if (!items.every(isValidCartItem)) {
+    return NextResponse.json(
+      { error: "Geçersiz sepet öğesi." },
+      { status: 400 }
+    );
   }
 
   try {

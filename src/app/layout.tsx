@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     description:
       "Unapologetic streetwear. Brutalist design. This is your last chance to secure the archive.",
     siteName: "LAST DANCE",
-    locale: "en_US",
+    locale: "tr_TR",
     type: "website",
   },
 };
@@ -48,7 +48,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
-      lang="en"
+      lang="tr"
       className={`${geist.variable} ${anton.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="bg-surface text-on-surface font-body-md min-h-screen flex flex-col">

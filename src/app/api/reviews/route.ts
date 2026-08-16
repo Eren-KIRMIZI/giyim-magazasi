@@ -7,6 +7,7 @@ import {
   ReviewRateLimitError,
   ReviewProductNotFoundError,
 } from "@/modules/reviews";
+import { revalidateStorefront } from "@/lib/revalidate";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
       rating: body.rating,
       comment: body.comment,
     });
+    revalidateStorefront();
     return NextResponse.json({ review }, { status: 201 });
   } catch (err) {
     if (err instanceof ReviewRateLimitError) {

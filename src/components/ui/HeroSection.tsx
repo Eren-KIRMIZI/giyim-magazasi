@@ -5,9 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import gsap from "gsap";
 import { heroImage } from "@/lib/data";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/config";
 
-const CAMPAIGN_BAND =
-  "The Final Drop — Secure the Archive — Campaign 001 — Free Shipping over €100";
+const CAMPAIGN_BAND = `The Final Drop — Secure the Archive — Campaign 001 — Free Shipping over €${FREE_SHIPPING_THRESHOLD}`;
 
 export default function HeroSection() {
   const rootRef = useRef<HTMLElement>(null);

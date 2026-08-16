@@ -7,6 +7,7 @@ import { getUserOrders } from "@/modules/orders";
 export const metadata: Metadata = {
   title: "Hesabım",
   description: "LAST DANCE — hesap ve sipariş geçmişiniz.",
+  robots: { index: false, follow: false },
 };
 
 export default async function HesabimPage() {

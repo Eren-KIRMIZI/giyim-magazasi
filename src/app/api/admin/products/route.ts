@@ -6,6 +6,7 @@ import {
   AdminProductSlugConflictError,
   AdminProductCategoryError,
 } from "@/modules/admin";
+import { revalidateStorefront } from "@/lib/revalidate";
 
 export async function POST(request: Request) {
   const admin = await requireAdmin();
@@ -22,6 +23,7 @@ export async function POST(request: Request) {
 
   try {
     const product = await createProduct(body);
+    revalidateStorefront();
     return NextResponse.json({ product }, { status: 201 });
   } catch (err) {
     if (err instanceof AdminProductSlugConflictError) {

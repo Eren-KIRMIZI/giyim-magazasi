@@ -26,9 +26,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Geçersiz istek." }, { status: 400 });
   }
 
-  const name = body.name?.trim();
+  const name = body.name?.trim() ?? "";
   const email = body.email?.trim().toLowerCase();
   const password = body.password;
+
+  if (name.length > 100) {
+    return NextResponse.json(
+      { error: "Ad en fazla 100 karakter olabilir." },
+      { status: 400 }
+    );
+  }
 
   if (!email || !EMAIL_RE.test(email)) {
     return NextResponse.json(
@@ -55,7 +62,6 @@ export async function POST(req: Request) {
       },
       select: { id: true, email: true, name: true },
     });
-
     return NextResponse.json({ user }, { status: 201 });
   } catch (err) {
     // Benzersiz e-posta ihlali: kullanıcı enumeration'ı önlemek için genel mesaj

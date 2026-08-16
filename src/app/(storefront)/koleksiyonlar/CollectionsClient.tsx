@@ -5,8 +5,7 @@ import ProductCard from "@/components/ui/ProductCard";
 import RecentlyViewedSection from "@/components/ui/RecentlyViewedSection";
 import { Icon } from "@/components/icons";
 import type { Product } from "@/modules/catalog";
-
-const SIZES = ["S", "M", "L", "XL"];
+import { PRODUCT_SIZES } from "@/lib/config";
 
 type GroupKey = "category" | "size" | "price";
 
@@ -165,7 +164,7 @@ export default function CollectionsClient({ products }: { products: Product[] })
         {groupHeader("size", "Size", selectedSizes.length, openGroups.size)}
         {openGroups.size && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {SIZES.map((size) => (
+            {PRODUCT_SIZES.map((size) => (
               <button
                 key={size}
                 type="button"
@@ -217,7 +216,7 @@ export default function CollectionsClient({ products }: { products: Product[] })
   );
 
   return (
-    <main className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+    <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
       <div className="flex flex-col md:flex-row gap-gutter">
         <div className="hidden md:block w-64 flex-shrink-0">{filterPanel}</div>
 
@@ -302,6 +301,6 @@ export default function CollectionsClient({ products }: { products: Product[] })
         </section>
       </div>
       <RecentlyViewedSection />
-    </main>
+    </div>
   );
 }

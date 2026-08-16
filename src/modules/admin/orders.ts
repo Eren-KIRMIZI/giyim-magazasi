@@ -26,13 +26,24 @@ export interface AdminOrderRow {
 export interface AdminOrdersFilter {
   status?: string;
   q?: string;
+  page?: number;
+}
+
+export const ADMIN_ORDERS_PAGE_SIZE = 50;
+
+export interface AdminOrdersResult {
+  orders: AdminOrderRow[];
+  total: number;
+  page: number;
+  pageCount: number;
 }
 
 export async function getAdminOrders(
   filter: AdminOrdersFilter
-): Promise<AdminOrderRow[]> {
+): Promise<AdminOrdersResult> {
   const status = filter.status ?? "";
   const q = (filter.q ?? "").trim();
+  const page = Math.max(1, Math.floor(filter.page ?? 1));
 
   const where: Prisma.OrderWhereInput = {};
   if (status && (ORDER_STATUSES as readonly string[]).includes(status)) {
@@ -47,30 +58,43 @@ export async function getAdminOrders(
     ];
   }
 
-  const orders = await prisma.order.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    include: {
-      user: { select: { email: true } },
-      items: true,
-    },
-  });
+  const take = ADMIN_ORDERS_PAGE_SIZE;
+  const skip = (page - 1) * take;
 
-  return orders.map((o) => ({
-    id: o.id,
-    orderNumber: o.orderNumber,
-    total: Number(o.total),
-    status: o.status,
-    email: o.user.email,
-    createdAt: o.createdAt,
-    items: o.items.map((i) => ({
-      id: i.id,
-      name: i.name,
-      quantity: i.quantity,
-      size: i.size,
-      color: i.color,
+  const [orders, total] = await prisma.$transaction([
+    prisma.order.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: { select: { email: true } },
+        items: true,
+      },
+      skip,
+      take,
+    }),
+    prisma.order.count({ where }),
+  ]);
+
+  return {
+    orders: orders.map((o) => ({
+      id: o.id,
+      orderNumber: o.orderNumber,
+      total: Number(o.total),
+      status: o.status,
+      email: o.user.email,
+      createdAt: o.createdAt,
+      items: o.items.map((i) => ({
+        id: i.id,
+        name: i.name,
+        quantity: i.quantity,
+        size: i.size,
+        color: i.color,
+      })),
     })),
-  }));
+    total,
+    page,
+    pageCount: Math.max(1, Math.ceil(total / take)),
+  };
 }
 
 export interface AdminOrderDetail {

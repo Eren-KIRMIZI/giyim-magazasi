@@ -6,6 +6,9 @@ import { prisma } from "@/infrastructure/prisma";
 import { rateLimit, clientIp } from "@/infrastructure/redis/rate-limit";
 import { logSecurity } from "@/lib/logger";
 
+// Timing side-channel önlemi: var olmayan kullanıcılarda da aynı bcrypt maliyeti
+const DUMMY_HASH = bcrypt.hashSync("dummy-password-for-timing", 12);
+
 declare module "next-auth" {
   interface Session {
     user: {
@@ -36,23 +39,39 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = credentials?.password as string | undefined;
         if (!email || !password) return null;
 
-        // Brute-force koruması: e-posta + IP başına 10 deneme / 15 dk
+        // Brute-force koruması: IP başına 20 deneme / 15 dk
+        // (farklı e-postalara denemeleri de kapsar)
         const ip = request ? clientIp(request) : "unknown";
-        const limited = await rateLimit(`login:${email.toLowerCase()}:${ip}`, 10, 900);
+        const ipLimited = await rateLimit(`login-ip:${ip}`, 20, 900);
+        if (!ipLimited.ok) {
+          logSecurity("login rate-limited (ip)", { email, ip });
+          return null;
+        }
+        // E-posta + IP başına 10 deneme / 15 dk
+        const limited = await rateLimit(
+          `login:${email.toLowerCase()}:${ip}`,
+          10,
+          900
+        );
         if (!limited.ok) {
           logSecurity("login rate-limited", { email, ip });
           return null;
         }
 
         const user = await prisma.user.findUnique({ where: { email } });
-        if (!user?.passwordHash) {
-          logSecurity("failed login (no user)", { email, ip });
-          return null;
-        }
 
-        const valid = await bcrypt.compare(password, user.passwordHash);
-        if (!valid) {
-          logSecurity("failed login (bad password)", { email, ip });
+        // Timing side-channel önlemi: kullanıcı olmasa da aynı bcrypt maliyetini çalıştır
+        const valid = await bcrypt.compare(
+          password,
+          user?.passwordHash ?? DUMMY_HASH
+        );
+
+        if (!user?.passwordHash || !valid) {
+          logSecurity("failed login", {
+            email,
+            ip,
+            reason: user ? "bad password" : "no user",
+          });
           return null;
         }
 
@@ -79,7 +98,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { id: token.sub },
           select: { role: true, name: true, email: true },
         });
-        session.user.role = dbUser?.role ?? (token.role as string) ?? "CUSTOMER";
+        // Kullanıcı silindiyse rolü sıfırla: JWT'deki bayat ADMIN rolüne asla düşme.
+        session.user.role = dbUser?.role ?? "CUSTOMER";
         if (dbUser?.name) session.user.name = dbUser.name;
         if (dbUser?.email) session.user.email = dbUser.email;
       }

@@ -6,7 +6,12 @@ import {
   RESERVATION_STATUS,
   type ReservationLine,
 } from "./reservation";
-import { createOrderFromReservation } from "@/modules/orders";
+import { createOrderFromReservation, revivePaidOrder } from "@/modules/orders";
+import { lineTotalCents } from "@/lib/money";
+
+function isUniqueViolation(err: unknown): boolean {
+  return (err as { code?: string } | null)?.code === "P2002";
+}
 
 export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
   switch (event.type) {
@@ -14,10 +19,25 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
       const session = event.data.object as Stripe.Checkout.Session;
       const stripeSessionId = session.id;
 
+      // Async ödeme yöntemleri için "completed" henüz ödemenin alındığı anlamına
+      // gelmez; yalnızca gerçekten ödenmiş oturumları işleyelim.
+      if (session.payment_status !== "paid") {
+        console.log("Checkout completed without paid status:", stripeSessionId);
+        break;
+      }
+
       const existing = await prisma.order.findUnique({
         where: { stripeSessionId },
+        include: { items: true },
       });
-      if (existing) break;
+      if (existing) {
+        // "expired" webhook'u önce işlendiyse sipariş CANCELLED/FAILED'tır ve
+        // müşteri ödemiştir → PAID'e çevir + stoku yeniden tüket.
+        if (existing.status !== "PAID") {
+          await revivePaidOrder(existing);
+        }
+        break;
+      }
 
       const reservation = await prisma.orderReservation.findUnique({
         where: { stripeSessionId },
@@ -26,37 +46,53 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
         console.log("No reservation for session:", stripeSessionId);
         break;
       }
-      if (reservation.status === RESERVATION_STATUS.RELEASED) {
-        console.log(
-          "Payment completed after reservation released:",
-          stripeSessionId
-        );
-        break;
-      }
 
       const paymentIntent =
         typeof session.payment_intent === "string"
           ? session.payment_intent
           : null;
 
-      const total = (reservation.items as unknown as ReservationLine[]).reduce(
-        (sum, l) => sum + l.unitPrice * l.quantity,
-        0
-      );
-      const expectedTotal = session.amount_total
-        ? session.amount_total / 100
-        : null;
-      if (expectedTotal !== null && Math.abs(expectedTotal - total) > 0.01) {
+      const totalCents = (
+        reservation.items as unknown as ReservationLine[]
+      ).reduce((sum, l) => sum + lineTotalCents(l.unitPrice, l.quantity), 0);
+      const expectedTotalCents = session.amount_total ?? null;
+      if (
+        expectedTotalCents !== null &&
+        expectedTotalCents !== totalCents
+      ) {
         console.error(
-          `Amount mismatch for ${stripeSessionId}: stripe=${expectedTotal} reservation=${total}`
+          `Amount mismatch for ${stripeSessionId}: stripe=${expectedTotalCents} reservation=${totalCents}`
         );
       }
 
-      await createOrderFromReservation(reservation, "PAID", {
-        stripeSessionId,
-        paymentIntent,
-        stockConsumed: true,
-      });
+      if (reservation.status === RESERVATION_STATUS.RELEASED) {
+        // Rezervasyon süresi dolup stok iade edilmiş; siparişi kur, stoku yeniden tüket.
+        try {
+          await createOrderFromReservation(reservation, "PAID", {
+            stripeSessionId,
+            paymentIntent,
+            stockConsumed: true,
+            reconsumeStock: true,
+          });
+        } catch (err) {
+          // Eşzamanlı teslimat: sipariş zaten kurulmuş — retry'da break edilecek.
+          if (isUniqueViolation(err)) break;
+          throw err;
+        }
+        console.log("Order created (after released) for session:", stripeSessionId);
+        break;
+      }
+
+      try {
+        await createOrderFromReservation(reservation, "PAID", {
+          stripeSessionId,
+          paymentIntent,
+          stockConsumed: true,
+        });
+      } catch (err) {
+        if (isUniqueViolation(err)) break;
+        throw err;
+      }
       console.log("Order created for session:", stripeSessionId);
       break;
     }
@@ -82,11 +118,16 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
         break;
       }
 
-      await createOrderFromReservation(reservation, status, {
-        stripeSessionId,
-        paymentIntent: null,
-        stockConsumed: false,
-      });
+      try {
+        await createOrderFromReservation(reservation, status, {
+          stripeSessionId,
+          paymentIntent: null,
+          stockConsumed: false,
+        });
+      } catch (err) {
+        if (isUniqueViolation(err)) break;
+        throw err;
+      }
       console.log(`Order marked ${status} for session:`, stripeSessionId);
       break;
     }

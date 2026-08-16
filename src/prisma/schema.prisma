@@ -102,6 +102,7 @@ model Product {
   updatedAt    DateTime    @updatedAt
 
   @@index([categoryId])
+  @@index([status])
 }
 
 model ProductImage {
@@ -149,6 +150,7 @@ model Order {
   updatedAt          DateTime  @updatedAt
 
   @@index([userId])
+  @@index([status])
 }
 
 model OrderItem {
@@ -169,6 +171,7 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+  @@index([variantId])
 }
 
 model OrderReservation {

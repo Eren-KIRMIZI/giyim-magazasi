@@ -59,7 +59,12 @@ const completedEvent = (sessionId: string, extra: Record<string, unknown> = {}) 
     id: `evt_${sessionId}_completed`,
     type: "checkout.session.completed",
     data: {
-      object: { id: sessionId, amount_total: 20000, payment_intent: "pi_webhook" },
+      object: {
+        id: sessionId,
+        amount_total: 20000,
+        payment_status: "paid",
+        payment_intent: "pi_webhook",
+      },
       ...extra,
     },
   });

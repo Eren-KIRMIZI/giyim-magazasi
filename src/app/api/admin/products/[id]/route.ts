@@ -10,6 +10,7 @@ import {
   AdminProductInUseError,
 } from "@/modules/admin";
 import { logSecurity } from "@/lib/logger";
+import { revalidateStorefront } from "@/lib/revalidate";
 
 export async function PUT(
   request: Request,
@@ -31,6 +32,7 @@ export async function PUT(
 
   try {
     const product = await updateProduct(id, body);
+    revalidateStorefront();
     return NextResponse.json({ product });
   } catch (err) {
     if (err instanceof AdminProductNotFoundError) {
@@ -63,6 +65,7 @@ export async function DELETE(
   try {
     await deleteProduct(id);
     logSecurity("admin product delete", { actor: admin.user.email, productId: id });
+    revalidateStorefront();
     return NextResponse.json({ ok: true });
   } catch (err) {
     if (err instanceof AdminProductNotFoundError) {

@@ -5,6 +5,7 @@ export {
   resolveVariant,
   reserveStock,
   releaseStock,
+  consumeOrderStock,
   releaseReservation,
   releaseExpiredReservations,
   StockInsufficientError,

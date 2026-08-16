@@ -27,9 +27,9 @@ export default function CollectionsSection() {
               sizes="(max-width: 768px) 100vw, 66vw"
               className="object-cover object-center transition-transform duration-1000 group-hover:scale-110"
             />
-            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-500"></div>
+            <div className="absolute inset-0 bg-black/25 group-hover:bg-black/45 transition-colors duration-500"></div>
             <div className="absolute bottom-0 left-0 p-stack-md w-full flex justify-between items-end gap-4">
-              <h3 className="font-headline-md text-headline-lg-mobile md:text-headline-lg uppercase text-surface leading-none">
+              <h3 className="font-headline-md text-headline-lg-mobile md:text-headline-lg uppercase text-primary-fixed leading-none">
                 {main.title}
               </h3>
               <div className="bg-surface text-on-surface font-label-mono text-label-mono px-4 py-2 uppercase border border-on-surface group-hover:bg-primary group-hover:text-on-primary group-hover:border-primary transition-all duration-300">

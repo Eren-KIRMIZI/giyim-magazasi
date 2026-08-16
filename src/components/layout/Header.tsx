@@ -8,6 +8,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useCartStore } from "@/modules/cart";
 import { useWishlistStore } from "@/modules/wishlist";
 import { brandLogo } from "@/lib/data";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/config";
 import { Icon } from "@/components/icons";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
@@ -17,8 +18,7 @@ const NAV_LINKS = [
   { label: "Newsletter", href: "/newsletter" },
 ];
 
-const ANNOUNCEMENT =
-  "The Final Drop — Free shipping over €100 · While objects last";
+const ANNOUNCEMENT = `The Final Drop — Free shipping over €${FREE_SHIPPING_THRESHOLD} · While objects last`;
 
 const ICON_BTN =
   "p-2 rounded-sm transition-all duration-200 hover:bg-surface-container hover:text-primary active:scale-95";
@@ -165,6 +165,7 @@ export default function Header() {
 
         <div
           aria-hidden={!menuOpen}
+          inert={!menuOpen}
           className={`md:hidden fixed inset-0 z-40 bg-surface flex flex-col transition-opacity duration-300 ${
             menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
@@ -208,6 +209,25 @@ export default function Header() {
                 Wishlist
                 {wishlistCount > 0 && ` (${wishlistCount})`}
               </Link>
+              {status === "authenticated" ? (
+                <Link
+                  href="/hesabim"
+                  onClick={() => setMenuOpen(false)}
+                  className="font-headline-md text-headline-md uppercase text-on-surface hover:text-primary transition-colors flex items-center gap-2"
+                >
+                  <Icon name="person" className="w-[22px] h-[22px]" />
+                  {userName || "Hesabım"}
+                </Link>
+              ) : (
+                <Link
+                  href="/giris"
+                  onClick={() => setMenuOpen(false)}
+                  className="font-headline-md text-headline-md uppercase text-on-surface hover:text-primary transition-colors flex items-center gap-2"
+                >
+                  <Icon name="person" className="w-[22px] h-[22px]" />
+                  Login
+                </Link>
+              )}
             </div>
             <div
               style={{ transitionDelay: menuOpen ? `${180 + NAV_LINKS.length * 70}ms` : "0ms" }}

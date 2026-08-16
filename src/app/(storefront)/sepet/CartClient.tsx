@@ -5,10 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCartStore, cartItemKey } from "@/modules/cart";
 import { formatPrice } from "@/lib/data";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/config";
+import { fromCents, lineTotalCents } from "@/lib/money";
 import EmptyState from "@/components/ui/EmptyState";
 import { Icon } from "@/components/icons";
-
-const FREE_SHIPPING_THRESHOLD = 100;
 
 export default function CartClient() {
   const items = useCartStore((s) => s.items);
@@ -18,9 +18,11 @@ export default function CartClient() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
 
-  const subtotal = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
+  const subtotal = fromCents(
+    items.reduce(
+      (sum, item) => sum + lineTotalCents(item.price, item.quantity),
+      0
+    )
   );
   const shippingProgress = Math.min(subtotal / FREE_SHIPPING_THRESHOLD, 1);
   const remainingForFree = Math.max(
@@ -275,7 +277,7 @@ export default function CartClient() {
               </div>
             )}
             <p className="font-label-mono text-label-mono uppercase text-on-surface-variant text-center">
-              Stripe Checkout entegrasyonu — STRIPE_SECRET_KEY ile etkinleşir
+              Payments processed securely by Stripe
             </p>
           </div>
         </div>

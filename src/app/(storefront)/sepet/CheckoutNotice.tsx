@@ -14,8 +14,15 @@ export default function CheckoutNotice() {
 
   useEffect(() => {
     if (success === "1") {
-      clearCart();
-      track("order_completed");
+      // Sepeti yalnızca bu ödeme akışında bir kez temizle:
+      // URL'deki ?success=1 geri/ileri ile tekrar mount olursa
+      // kullanıcının yeni eklediği ürünler silinmesin.
+      const key = "ld-checkout-cleared";
+      if (typeof window !== "undefined" && !window.sessionStorage.getItem(key)) {
+        clearCart();
+        track("order_completed");
+        window.sessionStorage.setItem(key, "1");
+      }
     }
   }, [success, clearCart]);
 

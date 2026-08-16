@@ -57,24 +57,34 @@ export default function NewsletterForm({
     return (
       <form
         onSubmit={handleSubmit}
-        className={`flex w-full border-b border-surface dark:border-on-surface pb-2 group focus-within:border-primary transition-colors ${className}`}
+        className={`flex flex-col w-full ${className}`}
       >
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="EMAIL ADDRESS"
-          className="bg-transparent w-full font-label-mono text-label-mono text-surface dark:text-on-surface placeholder:text-surface-variant dark:placeholder:text-on-surface-variant focus:outline-none focus:ring-0 border-none p-0 transition-all duration-300"
-        />
-        <button
-          type="submit"
-          disabled={status === "loading"}
-          aria-label="Subscribe to newsletter"
-          className="text-surface dark:text-on-surface group-focus-within:text-primary transition-colors hover:translate-x-1 transform duration-300 disabled:opacity-60"
-        >
-          <Icon name="arrow_forward" className="w-[18px] h-[18px]" />
-        </button>
+        <div className="flex w-full border-b border-surface dark:border-on-surface pb-2 group focus-within:border-primary transition-colors">
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="EMAIL ADDRESS"
+            className="bg-transparent w-full font-label-mono text-label-mono text-surface dark:text-on-surface placeholder:text-surface-variant dark:placeholder:text-on-surface-variant focus:outline-none focus:ring-0 border-none p-0 transition-all duration-300"
+          />
+          <button
+            type="submit"
+            disabled={status === "loading"}
+            aria-label="Subscribe to newsletter"
+            className="text-surface dark:text-on-surface group-focus-within:text-primary transition-colors hover:translate-x-1 transform duration-300 disabled:opacity-60"
+          >
+            <Icon name="arrow_forward" className="w-[18px] h-[18px]" />
+          </button>
+        </div>
+        {error && (
+          <p
+            role="alert"
+            className="font-label-mono text-label-mono uppercase mt-2 text-error-container dark:text-error"
+          >
+            {error}
+          </p>
+        )}
       </form>
     );
   }

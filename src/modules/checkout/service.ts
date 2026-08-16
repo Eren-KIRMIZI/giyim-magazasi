@@ -8,6 +8,7 @@ import {
   RESERVATION_STATUS,
   type StockLine,
 } from "./reservation";
+import { toCents } from "@/lib/money";
 
 export interface CheckoutLineItem {
   slug: string;
@@ -52,6 +53,9 @@ export async function createCheckoutSession(
   if (!Array.isArray(items) || items.length === 0) {
     throw new CheckoutValidationError("Sepet boş.");
   }
+  if (items.length > 50) {
+    throw new CheckoutValidationError("Sepette çok fazla ürün var.");
+  }
 
   // Lazy cleanup: süresi dolmuş ACTIVE rezervasyonları önce iade et
   // (cron'a ek olarak checkout öncesi koruma — stok kilitlenmesini önler)
@@ -70,7 +74,12 @@ export async function createCheckoutSession(
 
   if (
     normalized.some(
-      (i) => !i.slug || !i.size || !Number.isInteger(i.quantity) || i.quantity < 1
+      (i) =>
+        !i.slug ||
+        !i.size ||
+        !Number.isInteger(i.quantity) ||
+        i.quantity < 1 ||
+        i.quantity > 99
     )
   ) {
     throw new CheckoutValidationError("Geçersiz sepet içeriği.");
@@ -86,8 +95,10 @@ export async function createCheckoutSession(
   const lines: StockLine[] = [];
   for (const item of normalized) {
     const product = productBySlug.get(item.slug);
-    if (!product || product.status === "DRAFT") {
-      throw new ProductNotFoundError(`Ürün bulunamadı: ${item.slug}`);
+    if (!product || product.status === "DRAFT" || product.status === "SOLD_OUT") {
+      throw new ProductNotFoundError(
+        `Ürün satışta değil: ${item.slug}`
+      );
     }
     lines.push({
       productId: product.id,
@@ -117,7 +128,7 @@ export async function createCheckoutSession(
         quantity: ri.quantity,
         price_data: {
           currency: "eur",
-          unit_amount: Math.round(ri.unitPrice * 100),
+          unit_amount: toCents(ri.unitPrice),
           product_data: {
             name: ri.color
               ? `${ri.name} (${ri.size} · ${ri.color})`

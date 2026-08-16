@@ -32,7 +32,10 @@ yarn-error.log*
 *.log
 
 # env files (can opt-in for committing if needed)
-.env*
+# .env.example is intentionally tracked as a template
+.env
+.env.*
+!.env.example
 
 # vercel
 .vercel

@@ -254,9 +254,6 @@ export default function ProductDetail({
                 <span className="font-label-mono text-label-mono uppercase">
                   Size
                 </span>
-                <a className="font-label-mono text-label-mono text-primary hover:underline">
-                  Size Guide
-                </a>
               </div>
               <div className="flex gap-2 flex-wrap">
                 {product.sizes.map((size) => {

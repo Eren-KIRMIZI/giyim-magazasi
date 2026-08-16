@@ -1,13 +1,8 @@
 import "server-only";
 import { prisma } from "@/infrastructure/prisma";
 import { Prisma } from "@prisma/client";
+import { COLOR_HEX } from "@/lib/config";
 import type { Product } from "./types";
-
-const COLOR_HEX: Record<string, string> = {
-  Black: "#1b1c1c",
-  White: "#faf9f9",
-  Red: "#dc2626",
-};
 
 const PRODUCT_INCLUDE = {
   category: true,
@@ -268,11 +263,16 @@ export async function searchProducts(
         ? { price: "desc" }
         : { createdAt: "desc" };
 
+  // Popular sıralamada satış sayısına göre sıralama bellekte yapılır; bu
+  // nedenle ürünler "take" ile kırpılamaz (ilk 200 dışındaki en çok satılan
+  // ürünler atlanmamalı).
+  const take = filters.sort === "popular" ? undefined : 200;
+
   const rows = await prisma.product.findMany({
     where,
     select: CARD_SELECT,
     orderBy,
-    take: 200,
+    take,
   });
 
   if (filters.sort === "popular") {

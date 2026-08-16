@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { releaseExpiredReservations } from "@/modules/checkout";
+import { revalidateStorefront } from "@/lib/revalidate";
 
 const CRON_SECRET = process.env.CRON_SECRET ?? "";
 
@@ -14,6 +15,7 @@ export async function GET(request: Request) {
 
   try {
     const released = await releaseExpiredReservations();
+    if (released > 0) revalidateStorefront();
     return NextResponse.json({ ok: true, released });
   } catch (err) {
     console.error("release-expired cron failed:", err);

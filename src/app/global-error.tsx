@@ -26,9 +26,9 @@ export default function GlobalError({
             gap: "1.5rem",
             textAlign: "center",
             padding: "1.5rem",
-            background: "#ffffff",
-            color: "#111111",
-            fontFamily: "ui-monospace, monospace",
+            background: "var(--color-surface, #faf9f9)",
+            color: "var(--color-on-surface, #1b1c1c)",
+            fontFamily: "var(--font-geist, ui-monospace, monospace)",
           }}
         >
           <div style={{ fontSize: "0.8rem", textTransform: "uppercase" }}>
@@ -41,8 +41,8 @@ export default function GlobalError({
             type="button"
             onClick={retry}
             style={{
-              background: "#111111",
-              color: "#ffffff",
+              background: "var(--color-on-surface, #1b1c1c)",
+              color: "var(--color-surface, #faf9f9)",
               border: "none",
               padding: "1rem 2rem",
               fontFamily: "inherit",

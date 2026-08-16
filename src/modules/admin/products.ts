@@ -316,16 +316,70 @@ export async function updateProduct(id: string, body: Record<string, unknown>) {
   );
   const base = productDataFromBody(body, slug);
 
+  // Varyant ID'lerini korumak için mevcut varyantları oku:
+  // aktif sipariş rezervasyonları variantId'yi referans alır; delete+create,
+  // referansları öldürüp stok iadesini no-op yapardı.
+  const existingVariants = await prisma.productVariant.findMany({
+    where: { productId: id },
+    select: { id: true, size: true, color: true },
+  });
+
+  const variantKey = (v: { size: string; color?: string | null }) =>
+    `${v.size}::${v.color ?? ""}`;
+
+  const seen = new Set<string>();
+  const uniqueVariants = variants.filter((v) => {
+    const key = variantKey(v);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const existingByKey = new Map(
+    existingVariants.map((v) => [variantKey(v), v.id])
+  );
+  const incomingKeys = new Set(uniqueVariants.map(variantKey));
+
   const updated = await prisma.$transaction(async (tx) => {
     await tx.productImage.deleteMany({ where: { productId: id } });
-    await tx.productVariant.deleteMany({ where: { productId: id } });
+
+    // Artık girmeyen varyantları sil; kalanları yerinde güncelle (ID korunur).
+    await tx.productVariant.deleteMany({
+      where: {
+        productId: id,
+        NOT: {
+          id: { in: existingVariants.filter((v) => incomingKeys.has(variantKey(v))).map((v) => v.id) },
+        },
+      },
+    });
+
+    for (const v of uniqueVariants) {
+      const sku = `${slug}-${v.size}-${(v.color ?? "default").toLowerCase()}`;
+      const existingId = existingByKey.get(variantKey(v));
+      if (existingId) {
+        await tx.productVariant.update({
+          where: { id: existingId },
+          data: { stock: v.stock, sku },
+        });
+      } else {
+        await tx.productVariant.create({
+          data: {
+            productId: id,
+            size: v.size,
+            color: v.color,
+            sku,
+            stock: v.stock,
+          },
+        });
+      }
+    }
 
     return tx.product.update({
       where: { id },
       data: {
         ...base,
-        stock: variants.length
-          ? variants.reduce((n, v) => n + v.stock, 0)
+        stock: uniqueVariants.length
+          ? uniqueVariants.reduce((n, v) => n + v.stock, 0)
           : base.stock,
         status: ["ACTIVE", "DRAFT", "SOLD_OUT"].includes(String(body.status))
           ? String(body.status)
@@ -336,14 +390,6 @@ export async function updateProduct(id: string, body: Record<string, unknown>) {
             url: img.url,
             alt: img.alt,
             position: i,
-          })),
-        },
-        variants: {
-          create: variants.map((v) => ({
-            size: v.size,
-            color: v.color,
-            sku: `${slug}-${v.size}-${(v.color ?? "default").toLowerCase()}`,
-            stock: v.stock,
           })),
         },
       },

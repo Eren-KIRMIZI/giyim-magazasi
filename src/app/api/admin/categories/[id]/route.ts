@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/modules/auth";
 import { slugify } from "@/lib/utils";
 import { prisma } from "@/infrastructure/prisma";
+import { logSecurity } from "@/lib/logger";
+import { revalidateStorefront } from "@/lib/revalidate";
 
 export async function PUT(
   request: Request,
@@ -49,6 +51,8 @@ export async function PUT(
     where: { id },
     data: { slug, name },
   });
+  logSecurity("admin category update", { id, slug, admin: admin.user.id });
+  revalidateStorefront();
 
   return NextResponse.json({ category });
 }
@@ -80,6 +84,8 @@ export async function DELETE(
   }
 
   await prisma.category.delete({ where: { id } });
+  logSecurity("admin category delete", { id, admin: admin.user.id });
+  revalidateStorefront();
 
   return NextResponse.json({ ok: true });
 }

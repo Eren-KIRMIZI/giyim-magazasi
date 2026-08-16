@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Giriş",
   description:
     "LAST DANCE arşivine giriş yap veya yeni bir hesap oluştur.",
+  robots: { index: false, follow: false },
 };
 
 export default function GirisPage() {

@@ -12,17 +12,27 @@ export const metadata: Metadata = {
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
 }) {
   const params = await searchParams;
 
-  const orders = await getAdminOrders({
-    status: params.status,
-    q: params.q,
-  });
-
   const status = params.status ?? "";
   const q = (params.q ?? "").trim();
+  const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
+
+  const { orders, total, page: currentPage, pageCount } = await getAdminOrders({
+    status,
+    q,
+    page,
+  });
+
+  const buildPageHref = (p: number) => {
+    const sp = new URLSearchParams();
+    if (status) sp.set("status", status);
+    if (q) sp.set("q", q);
+    sp.set("page", String(p));
+    return `/admin/siparisler?${sp.toString()}`;
+  };
 
   return (
     <div className="flex flex-col gap-stack-lg">
@@ -71,47 +81,77 @@ export default async function AdminOrdersPage({
           Sipariş bulunamadı.
         </div>
       ) : (
-        <div className="flex flex-col border border-on-surface divide-y divide-on-surface">
-          {orders.map((order) => (
-            <div
-              key={order.id}
-              className="p-stack-md flex flex-col gap-3 hover:bg-surface-container transition-colors"
-            >
-              <div className="flex flex-wrap justify-between items-center gap-4">
-                <Link
-                  href={`/admin/siparisler/${order.id}`}
-                  className="flex flex-col gap-1"
-                >
-                  <span className="font-label-mono text-label-mono uppercase text-on-surface">
-                    {order.orderNumber}
-                  </span>
-                  <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
-                    {order.email} ·{" "}
-                    {order.createdAt.toLocaleString("tr-TR")}
-                  </span>
-                </Link>
-                <div className="flex items-center gap-4">
-                  <span className="font-label-mono text-label-mono uppercase text-on-surface">
-                    €{Number(order.total).toFixed(2).replace(".", ",")}
-                  </span>
-                  <OrderStatus orderId={order.id} status={order.status} />
+        <>
+          <div className="font-label-mono text-label-mono uppercase text-on-surface-variant">
+            {total} sipariş
+          </div>
+          <div className="flex flex-col border border-on-surface divide-y divide-on-surface">
+            {orders.map((order) => (
+              <div
+                key={order.id}
+                className="p-stack-md flex flex-col gap-3 hover:bg-surface-container transition-colors"
+              >
+                <div className="flex flex-wrap justify-between items-center gap-4">
+                  <Link
+                    href={`/admin/siparisler/${order.id}`}
+                    className="flex flex-col gap-1"
+                  >
+                    <span className="font-label-mono text-label-mono uppercase text-on-surface">
+                      {order.orderNumber}
+                    </span>
+                    <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
+                      {order.email} ·{" "}
+                      {order.createdAt.toLocaleString("tr-TR")}
+                    </span>
+                  </Link>
+                  <div className="flex items-center gap-4">
+                    <span className="font-label-mono text-label-mono uppercase text-on-surface">
+                      €{Number(order.total).toFixed(2).replace(".", ",")}
+                    </span>
+                    <OrderStatus orderId={order.id} status={order.status} />
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {order.items.map((item) => (
+                    <span
+                      key={item.id}
+                      className="font-label-mono text-label-mono uppercase text-on-surface-variant border border-on-surface px-2 py-1"
+                    >
+                      {item.name} × {item.quantity}
+                      {item.size ? ` (${item.size})` : ""}
+                      {item.color ? ` · ${item.color}` : ""}
+                    </span>
+                  ))}
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {order.items.map((item) => (
-                  <span
-                    key={item.id}
-                    className="font-label-mono text-label-mono uppercase text-on-surface-variant border border-on-surface px-2 py-1"
+            ))}
+          </div>
+          {pageCount > 1 && (
+            <div className="flex items-center justify-between gap-4 border-t border-on-surface pt-stack-sm">
+              <span className="font-label-mono text-label-mono uppercase text-on-surface-variant">
+                Sayfa {currentPage} / {pageCount}
+              </span>
+              <div className="flex items-center gap-2">
+                {currentPage > 1 && (
+                  <Link
+                    href={buildPageHref(currentPage - 1)}
+                    className="border border-on-surface px-4 py-2 font-label-mono text-label-mono uppercase hover:bg-on-surface hover:text-surface transition-colors"
                   >
-                    {item.name} × {item.quantity}
-                    {item.size ? ` (${item.size})` : ""}
-                    {item.color ? ` · ${item.color}` : ""}
-                  </span>
-                ))}
+                    Önceki
+                  </Link>
+                )}
+                {currentPage < pageCount && (
+                  <Link
+                    href={buildPageHref(currentPage + 1)}
+                    className="border border-on-surface bg-on-surface text-surface px-4 py-2 font-label-mono text-label-mono uppercase hover:bg-primary transition-colors"
+                  >
+                    Sonraki
+                  </Link>
+                )}
               </div>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );

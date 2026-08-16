@@ -20,6 +20,8 @@ export default function ProductCard({
   index,
 }: ProductCardProps) {
   const soldOut = product.badge === "SOLD OUT";
+  const firstImage = product.images[0];
+  const alternateImage = product.images[1];
   const hasAlternate = product.images.length > 1;
   const borderClasses =
     variant === "tile"
@@ -31,26 +33,35 @@ export default function ProductCard({
       : null;
 
   return (
-    <Link
-      href={`/urunler/${product.slug}`}
-      className={`group h-full flex flex-col bg-surface hover:bg-surface-container transition-colors duration-300 ${borderClasses} ${className}`}
+    <div
+      className={`group relative h-full flex flex-col bg-surface hover:bg-surface-container transition-colors duration-300 ${borderClasses} ${className}`}
     >
-      <div className="w-full aspect-[4/5] relative overflow-hidden bg-surface-container">
-        <Image
-          src={product.images[0].src}
-          alt={product.images[0].alt}
-          fill
-          sizes={IMAGE_SIZES}
-          className={`object-cover object-center transition-all duration-700 ease-out ${
-            hasAlternate
-              ? "group-hover:opacity-0 group-hover:scale-110"
-              : "group-hover:scale-105"
-          }`}
-        />
-        {hasAlternate && (
+      <Link
+        href={`/urunler/${product.slug}`}
+        aria-label={product.name}
+        className="relative w-full aspect-[4/5] block overflow-hidden bg-surface-container"
+      >
+        {firstImage ? (
           <Image
-            src={product.images[1].src}
-            alt={product.images[1].alt}
+            src={firstImage.src}
+            alt={firstImage.alt}
+            fill
+            sizes={IMAGE_SIZES}
+            className={`object-cover object-center transition-all duration-700 ease-out ${
+              hasAlternate
+                ? "group-hover:opacity-0 group-hover:scale-110"
+                : "group-hover:scale-105"
+            }`}
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center font-label-mono text-label-mono uppercase text-on-surface-variant">
+            No Image
+          </div>
+        )}
+        {firstImage && hasAlternate && alternateImage && (
+          <Image
+            src={alternateImage.src}
+            alt={alternateImage.alt}
             fill
             loading="lazy"
             sizes={IMAGE_SIZES}
@@ -75,21 +86,6 @@ export default function ProductCard({
             </span>
           </div>
         )}
-        <div className="absolute top-2 right-2 bg-surface/80 backdrop-blur-sm border border-on-surface/20">
-          <WishlistButton
-            item={{
-              id: product.id,
-              slug: product.slug,
-              name: product.name,
-              subtitle: product.subtitle,
-              price: product.price,
-              image: product.images[0].src,
-              imageAlt: product.images[0].alt,
-              badge: product.badge,
-            }}
-            className="w-9 h-9 text-on-surface hover:text-primary hover:bg-surface active:scale-90"
-          />
-        </div>
         {!soldOut && (
           <div className="absolute inset-x-0 bottom-0 bg-on-surface text-surface font-label-mono text-label-mono uppercase py-3 text-center flex items-center justify-center gap-2 translate-y-full group-hover:translate-y-0 group-hover:bg-primary transition-all duration-300">
             View Object
@@ -98,8 +94,23 @@ export default function ProductCard({
             </span>
           </div>
         )}
+      </Link>
+      <div className="absolute top-2 right-2 bg-surface/80 backdrop-blur-sm border border-on-surface/20">
+        <WishlistButton
+          item={{
+            id: product.id,
+            slug: product.slug,
+            name: product.name,
+            subtitle: product.subtitle,
+            price: product.price,
+            image: firstImage?.src ?? "",
+            imageAlt: firstImage?.alt ?? product.name,
+            badge: product.badge,
+          }}
+          className="w-9 h-9 text-on-surface hover:text-primary hover:bg-surface active:scale-90"
+        />
       </div>
-      <div className="p-4 flex flex-col gap-1.5 flex-1">
+      <Link href={`/urunler/${product.slug}`} className="p-4 flex flex-col gap-1.5 flex-1">
         <div className="flex items-center justify-between gap-2">
           {product.categoryLabel ? (
             <span className="font-label-mono text-label-mono uppercase tracking-widest text-on-surface-variant">
@@ -139,7 +150,7 @@ export default function ProductCard({
             {formatPrice(product.price)}
           </span>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 }

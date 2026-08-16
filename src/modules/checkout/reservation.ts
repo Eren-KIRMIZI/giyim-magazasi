@@ -38,15 +38,26 @@ export class StockInsufficientError extends Error {
 
 type Tx = Prisma.TransactionClient;
 
-async function syncProductStock(tx: Tx, productId: string) {
-  const agg = await tx.productVariant.aggregate({
-    where: { productId },
-    _sum: { stock: true },
-  });
-  await tx.product.update({
-    where: { id: productId },
-    data: { stock: agg._sum.stock ?? 0 },
-  });
+/**
+ * Product.stock, varyant stoklarının denormalize toplamıdır.
+ * Aggregate ile yeniden hesaplamak yerine işlem delta'sını (decrement/increment)
+ * doğrudan uyguluyoruz — böylece aynı ürünün farklı varyantlarına eşzamanlı
+ * dokunan transaction'lar (READ COMMITTED) birbirinin güncellemesini ezmez.
+ */
+async function applyProductStockDelta(
+  tx: Tx,
+  delta: Map<string, number>
+) {
+  for (const [productId, amount] of delta) {
+    if (amount === 0) continue;
+    await tx.product.update({
+      where: { id: productId },
+      data:
+        amount > 0
+          ? { stock: { increment: amount } }
+          : { stock: { decrement: -amount } },
+    });
+  }
 }
 
 export async function resolveVariant(
@@ -80,7 +91,7 @@ export async function reserveStock(
   productPrices: Map<string, number>
 ): Promise<StockLineResolved[]> {
   const resolved: StockLineResolved[] = [];
-  const touchedProducts = new Set<string>();
+  const touchedProducts = new Map<string, number>();
 
   for (const line of lines) {
     const variant = await resolveVariant(
@@ -105,7 +116,10 @@ export async function reserveStock(
       );
     }
 
-    touchedProducts.add(line.productId);
+    touchedProducts.set(
+      line.productId,
+      (touchedProducts.get(line.productId) ?? 0) - line.quantity
+    );
 
     resolved.push({
       ...line,
@@ -119,9 +133,7 @@ export async function reserveStock(
     });
   }
 
-  for (const productId of touchedProducts) {
-    await syncProductStock(tx, productId);
-  }
+  await applyProductStockDelta(tx, touchedProducts);
 
   return resolved;
 }
@@ -133,20 +145,50 @@ export interface StockReleaseLine {
 }
 
 export async function releaseStock(tx: Tx, lines: StockReleaseLine[]) {
-  const touchedProducts = new Set<string>();
+  const touchedProducts = new Map<string, number>();
 
   for (const line of lines) {
     if (!line.variantId || !line.productId) continue;
-    await tx.productVariant.updateMany({
+    const updated = await tx.productVariant.updateMany({
       where: { id: line.variantId },
       data: { stock: { increment: line.quantity } },
     });
-    touchedProducts.add(line.productId);
+    if (updated.count === 1) {
+      touchedProducts.set(
+        line.productId,
+        (touchedProducts.get(line.productId) ?? 0) + line.quantity
+      );
+    }
   }
 
-  for (const productId of touchedProducts) {
-    await syncProductStock(tx, productId);
+  await applyProductStockDelta(tx, touchedProducts);
+}
+
+/**
+ * Rezervasyonu süresi dolup iade edilmiş (RELEASED) stoku, ödeme sonrası
+ * yeniden tüketir. Variant bazlı gte guard ile oversell engellenir.
+ */
+export async function consumeOrderStock(tx: Tx, lines: StockReleaseLine[]) {
+  const touchedProducts = new Map<string, number>();
+
+  for (const line of lines) {
+    if (!line.variantId || !line.productId) continue;
+    const updated = await tx.productVariant.updateMany({
+      where: { id: line.variantId, stock: { gte: line.quantity } },
+      data: { stock: { decrement: line.quantity } },
+    });
+    if (updated.count !== 1) {
+      throw new StockInsufficientError(
+        `Rezervasyon süresi dolmuş ürün artık stokta yok (${line.variantId})`
+      );
+    }
+    touchedProducts.set(
+      line.productId,
+      (touchedProducts.get(line.productId) ?? 0) - line.quantity
+    );
   }
+
+  await applyProductStockDelta(tx, touchedProducts);
 }
 
 export interface ReservationLine {

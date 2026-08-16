@@ -1,12 +1,15 @@
 import { randomBytes } from "crypto";
 import type { Order, OrderItem } from "@prisma/client";
 import { prisma } from "@/infrastructure/prisma";
+import { logSecurity } from "@/lib/logger";
 import {
   RESERVATION_STATUS,
+  consumeOrderStock,
   releaseStock,
   type ReservationLine,
   type ReservationRecord,
 } from "@/modules/checkout";
+import { fromCents, lineTotalCents } from "@/lib/money";
 
 export const ORDER_STATUSES = [
   "PENDING",
@@ -41,6 +44,7 @@ export async function createOrderFromReservation(
     stripeSessionId: string;
     paymentIntent?: string | null;
     stockConsumed: boolean;
+    reconsumeStock?: boolean;
   }
 ) {
   const lines = (Array.isArray(reservation.items)
@@ -53,7 +57,9 @@ export async function createOrderFromReservation(
     select: { email: true, name: true },
   });
 
-  const total = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
+  const total = fromCents(
+    lines.reduce((sum, l) => sum + lineTotalCents(l.unitPrice, l.quantity), 0)
+  );
 
   await prisma.$transaction(async (tx) => {
     await tx.order.create({
@@ -87,6 +93,67 @@ export async function createOrderFromReservation(
       where: { stripeSessionId: data.stripeSessionId, status: RESERVATION_STATUS.ACTIVE },
       data: { status: RESERVATION_STATUS.CONSUMED },
     });
+
+    // Rezervasyon süresi dolup stok iade edilmişse (RELEASED), ödeme geldiği için
+    // stoku yeniden tüket. Stok yetmezse siparişi yine de PAID tut ve kritik log at.
+    if (data.reconsumeStock) {
+      try {
+        await consumeOrderStock(
+          tx,
+          lines.map((l) => ({
+            variantId: l.variantId,
+            productId: l.productId,
+            quantity: l.quantity,
+          }))
+        );
+      } catch (err) {
+        await tx.order.update({
+          where: { stripeSessionId: data.stripeSessionId },
+          data: { stockConsumed: false, stockRestored: true },
+        });
+        logSecurity("checkout stock shortfall after paid", {
+          stripeSessionId: data.stripeSessionId,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  });
+}
+
+/**
+ * "expired" webhook'u önce işlenip siparişi CANCELLED/FAILED yapmış ama müşteri
+ * ödemişse, geciken "completed" olayı siparişi PAID'e çevirir ve stoku yeniden tüketir.
+ */
+export async function revivePaidOrder(order: OrderWithItems): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    const updated = await tx.order.updateMany({
+      where: {
+        id: order.id,
+        status: { in: ["CANCELLED", "FAILED"] },
+      },
+      data: { status: "PAID", stockConsumed: true, stockRestored: false },
+    });
+    if (updated.count !== 1) return;
+
+    try {
+      await consumeOrderStock(
+        tx,
+        order.items.map((i) => ({
+          variantId: i.variantId ?? "",
+          productId: i.productId ?? "",
+          quantity: i.quantity,
+        }))
+      );
+    } catch (err) {
+      await tx.order.update({
+        where: { id: order.id },
+        data: { stockConsumed: false, stockRestored: true },
+      });
+      logSecurity("paid order stock shortfall", {
+        orderId: order.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   });
 }
 

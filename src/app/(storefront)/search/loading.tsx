@@ -1,6 +1,6 @@
 export default function SearchLoading() {
   return (
-    <main className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+    <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
       <div className="flex flex-col md:flex-row gap-gutter">
         <div className="hidden md:block w-64 flex-shrink-0">
           <div className="h-6 w-32 bg-surface-variant animate-pulse mb-stack-md" />
@@ -25,6 +25,6 @@ export default function SearchLoading() {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

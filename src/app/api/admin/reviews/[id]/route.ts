@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/modules/auth";
 import { prisma } from "@/infrastructure/prisma";
+import { logSecurity } from "@/lib/logger";
+import { revalidateStorefront } from "@/lib/revalidate";
 
 export async function DELETE(
   _request: Request,
@@ -19,6 +21,12 @@ export async function DELETE(
   }
 
   await prisma.review.delete({ where: { id } });
+  logSecurity("admin review delete", {
+    id,
+    productId: existing.productId,
+    admin: admin.user.id,
+  });
+  revalidateStorefront();
 
   return NextResponse.json({ ok: true });
 }

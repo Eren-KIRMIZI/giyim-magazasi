@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/infrastructure/stripe";
 import { handleStripeEvent } from "@/modules/checkout";
+import { revalidateStorefront } from "@/lib/revalidate";
 
 export async function POST(request: Request) {
   const stripe = getStripe();
@@ -41,6 +42,9 @@ export async function POST(request: Request) {
     console.error("Webhook handler error:", err);
     return NextResponse.json({ error: "Webhook handling failed" }, { status: 500 });
   }
+
+  // Ödeme/iptal stok ve SOLD OUT durumunu değiştirdi; storefront ISR önbelleğini kır.
+  revalidateStorefront();
 
   return NextResponse.json({ received: true });
 }

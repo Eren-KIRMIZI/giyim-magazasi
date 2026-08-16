@@ -1,29 +1,12 @@
 import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/site";
+import { SHIPPING_TIERS } from "@/lib/config";
 
 export const metadata: Metadata = {
   title: "Shipping",
   description: "LAST DANCE shipping policy — dispatch times, carriers and delivery.",
   alternates: { canonical: `${SITE_URL}/shipping` },
 };
-
-const ROWS = [
-  {
-    region: "Domestic (TR)",
-    time: "1–3 iş günü",
-    cost: "€8 — 150€ üzeri ücretsiz",
-  },
-  {
-    region: "Europe",
-    time: "3–6 iş günü",
-    cost: "€12 — 250€ üzeri ücretsiz",
-  },
-  {
-    region: "Rest of World",
-    time: "6–12 iş günü",
-    cost: "€20",
-  },
-];
 
 export default function ShippingPage() {
   return (
@@ -39,7 +22,7 @@ export default function ShippingPage() {
       </div>
 
       <div className="flex flex-col border border-on-surface divide-y divide-on-surface">
-        {ROWS.map((row) => (
+        {SHIPPING_TIERS.map((row) => (
           <div
             key={row.region}
             className="grid grid-cols-1 md:grid-cols-3 gap-2 p-stack-md"

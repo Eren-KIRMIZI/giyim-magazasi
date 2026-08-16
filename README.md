@@ -96,6 +96,7 @@ cp .env.example .env
 | `AUTH_SECRET` | `npx auth secret` ile üretilebilir |
 | `AUTH_URL` / `NEXT_PUBLIC_APP_URL` | Uygulama adresi (yerel: `http://localhost:3000`); checkout redirect origin'i |
 | `NEXT_PUBLIC_SITE_URL` | SEO taban URL'i (canonical/OG/sitemap; yoksa `https://lastdance.store`) |
+| `ALLOWED_ORIGINS` | Checkout open-redirect allowlist'i — virgülle ayrılmış ek origin'ler (varsayılan: `NEXT_PUBLIC_APP_URL` + `NEXT_PUBLIC_SITE_URL` + `http://localhost:3000`) |
 | `CRON_SECRET` | Süresi dolan rezervasyon temizliği için Bearer token (`/api/cron/release-expired`) |
 
 > Not: `next.config.ts`'te görsel uzak host yalnızca `lh3.googleusercontent.com` (`/aida-public/**`) için açık. `public/uploads` lokaldir ve `images.remotePatterns` gerektirmez.

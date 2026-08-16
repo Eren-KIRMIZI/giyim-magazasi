@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/modules/auth";
 import { slugify } from "@/lib/utils";
 import { prisma } from "@/infrastructure/prisma";
+import { logSecurity } from "@/lib/logger";
+import { revalidateStorefront } from "@/lib/revalidate";
 
 export async function GET() {
   const admin = await requireAdmin();
@@ -55,6 +57,8 @@ export async function POST(request: Request) {
   }
 
   const category = await prisma.category.create({ data: { slug, name } });
+  logSecurity("admin category create", { id: category.id, slug, admin: admin.user.id });
+  revalidateStorefront();
 
   return NextResponse.json({ category }, { status: 201 });
 }

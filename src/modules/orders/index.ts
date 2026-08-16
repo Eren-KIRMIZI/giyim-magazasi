@@ -3,6 +3,7 @@ export {
   ORDER_STATUS_LABELS,
   generateOrderNumber,
   createOrderFromReservation,
+  revivePaidOrder,
   applyOrderStatusChange,
   type StatusChangeResult,
 } from "./order";

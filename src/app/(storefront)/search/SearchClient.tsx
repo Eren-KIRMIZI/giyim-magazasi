@@ -6,15 +6,8 @@ import ProductCard from "@/components/ui/ProductCard";
 import EmptyState from "@/components/ui/EmptyState";
 import { Icon } from "@/components/icons";
 import type { Product } from "@/modules/catalog";
+import { PRODUCT_SIZES, FILTER_COLORS } from "@/lib/config";
 import { buildSearchUrl, type SearchQueryState } from "./searchParams";
-
-const SIZES = ["S", "M", "L", "XL", "XXL", "39", "40", "41", "42", "43", "44"];
-
-const COLORS: { name: string; hex: string }[] = [
-  { name: "Black", hex: "#1b1c1c" },
-  { name: "White", hex: "#faf9f9" },
-  { name: "Red", hex: "#dc2626" },
-];
 
 const SORTS: { value: SearchQueryState["sort"]; label: string }[] = [
   { value: "newest", label: "Newest" },
@@ -97,7 +90,7 @@ export default function SearchClient({
       <div>
         <h3 className="font-label-mono text-label-mono uppercase mb-3">Size</h3>
         <div className="flex flex-wrap gap-2">
-          {SIZES.map((size) => (
+          {PRODUCT_SIZES.map((size) => (
             <button
               key={size}
               type="button"
@@ -116,7 +109,7 @@ export default function SearchClient({
       <div>
         <h3 className="font-label-mono text-label-mono uppercase mb-3">Color</h3>
         <div className="flex flex-wrap gap-2">
-          {COLORS.map((color) => (
+          {FILTER_COLORS.map((color) => (
             <button
               key={color.name}
               type="button"
@@ -219,7 +212,7 @@ export default function SearchClient({
   }
 
   return (
-    <main className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+    <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
       <div className="flex flex-col md:flex-row gap-gutter">
         <div className="hidden md:block w-64 flex-shrink-0">{filterPanel}</div>
 
@@ -339,6 +332,6 @@ export default function SearchClient({
           )}
         </section>
       </div>
-    </main>
+    </div>
   );
 }

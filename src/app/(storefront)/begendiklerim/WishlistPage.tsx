@@ -11,7 +11,7 @@ export default function WishlistPage() {
   const items = useWishlistStore((s) => s.items);
 
   return (
-    <main className="w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+    <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
       <div className="mb-stack-lg border-b border-on-surface pb-stack-sm">
         <h1 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg uppercase tracking-tight">
           Wishlist
@@ -76,6 +76,6 @@ export default function WishlistPage() {
           ))}
         </div>
       )}
-    </main>
+    </div>
   );
 }
