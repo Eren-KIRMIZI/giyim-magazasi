@@ -172,7 +172,3 @@ Projenin güvenilirliğini sağlamak adına iki farklı test yaklaşımı benims
 ## Webhook Yapılandırması (Önemli)
 
 Stripe üzerinden alınan başarılı ödemeler, stok düşümü ve e-posta gönderimi için webhook'lara güvenir. Webhook dinleyicisi `/api/webhooks/stripe` rotasındadır. Geliştirme aşamasında webhook'ları lokal olarak test etmek için Stripe CLI kullanarak `checkout.session.completed` event'ini lokal sunucunuza yönlendirmeniz gerekmektedir.
-
-## Lisans
-
-Tüm hakları saklıdır. LAST DANCE.
