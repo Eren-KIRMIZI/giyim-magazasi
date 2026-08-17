@@ -2,6 +2,52 @@
 
 LAST DANCE, premium streetwear (sokak giyimi) markaları için tasarlanmış modern, yüksek performanslı ve tam donanımlı bir e-ticaret web uygulamasıdır. Proje, "brutalist" (keskin ve endüstriyel) bir tasarım anlayışına sahip olup, kullanıcılara kesintisiz, güvenli ve erişilebilir bir alışveriş deneyimi sunmak üzere mühendislik pratikleri gözetilerek geliştirilmiştir.
 
+---
+
+<img width="1365" height="580" alt="image" src="https://github.com/user-attachments/assets/75269c91-4129-46e4-8eca-9dbba242b1d6" />
+
+<img width="1366" height="641" alt="image" src="https://github.com/user-attachments/assets/18f402f1-4b26-4bbd-88ca-9a9d1bfb2633" />
+
+<img width="1366" height="611" alt="image" src="https://github.com/user-attachments/assets/f81a5e12-6ec2-468b-8789-777f0398667c" />
+
+<img width="1359" height="131" alt="image" src="https://github.com/user-attachments/assets/827daa64-a7f5-474f-855a-4a16127c135f" />
+
+<img width="1358" height="310" alt="image" src="https://github.com/user-attachments/assets/c3278605-d417-4c66-a5d0-d2b87c6b501d" />
+
+<img width="1359" height="538" alt="image" src="https://github.com/user-attachments/assets/0e591d05-dc1a-4601-9030-ae560bfde218" />
+
+<img width="941" height="443" alt="image" src="https://github.com/user-attachments/assets/e890bf7f-9f26-43da-bef4-89092e847e43" />
+
+<img width="936" height="642" alt="image" src="https://github.com/user-attachments/assets/6cfbe6c8-0d2b-424e-a788-4efe6c4d6a18" />
+
+<img width="1135" height="595" alt="image" src="https://github.com/user-attachments/assets/bd2d61ba-90c1-405f-824a-d63003974271" />
+
+<img width="1152" height="398" alt="image" src="https://github.com/user-attachments/assets/17dfb445-ec92-4233-80d4-281fcbd65cf1" />
+
+<img width="1171" height="226" alt="image" src="https://github.com/user-attachments/assets/b6715a74-0161-4b6e-ac9d-fe5463e4681e" />
+
+<img width="1359" height="609" alt="image" src="https://github.com/user-attachments/assets/b0887055-69ae-439d-b8f3-600c7e46716e" />
+
+<img width="1366" height="625" alt="image" src="https://github.com/user-attachments/assets/cd48403d-535c-4f15-ba58-3d4de4430cde" />
+
+<img width="1366" height="640" alt="image" src="https://github.com/user-attachments/assets/ceb518ce-2c54-4faf-827c-682e8617915b" />
+
+<img width="1366" height="612" alt="image" src="https://github.com/user-attachments/assets/d6e84aa8-a953-4188-b752-a9bbe4997bd9" />
+
+<img width="961" height="303" alt="image" src="https://github.com/user-attachments/assets/58396f1b-2fd2-4ad3-ab2b-26f38d457b6a" />
+
+<img width="971" height="479" alt="image" src="https://github.com/user-attachments/assets/721d0f9e-cd5c-4742-bca3-7660dff060fc" />
+
+<img width="909" height="638" alt="image" src="https://github.com/user-attachments/assets/7186be80-cad8-4943-a660-251a6e1a60c8" />
+
+<img width="1207" height="604" alt="image" src="https://github.com/user-attachments/assets/b963afaf-90f5-4ccf-a868-e0fc6c448000" />
+
+<img width="932" height="310" alt="image" src="https://github.com/user-attachments/assets/62a1b5f8-5398-481b-ad50-bdd5ed556315" />
+
+<img width="929" height="275" alt="image" src="https://github.com/user-attachments/assets/714e01ad-e62a-4d81-989c-46050bb9db82" />
+
+---
+
 ## Mimari ve Teknoloji Yığını (Tech Stack)
 
 Bu proje, en modern JavaScript/TypeScript ekosistemi kullanılarak, yüksek ölçeklenebilirlik ve performans hedeflenerek inşa edilmiştir:
